@@ -29,9 +29,14 @@ Local files to review during every Neuron update:
 - `VendorBootstrap.php`: embedded dependency function bootstrap;
 - `Api/INeuronProviderFactory.php`: provider construction extension point;
 - `Api/INeuronAgentFactory.php`: agent construction extension point;
+- `Api/INeuronChatHistoryFactory.php`: persistent history extension point;
 - `Dto/NeuronAgentConfiguration.php`: configured-LLM and runtime normalization;
 - `Service/NeuronProviderFactory.php`: maps normalized configured LLMs to Neuron providers;
 - `Service/NeuronAgentFactory.php`: agent and optional MCP setup;
+- `Chat/History/DatabaseNeuronChatHistory.php`: public `AbstractChatHistory` adapter;
+- `Service/NeuronChatHistoryFactory.php`: history, locking and context-window setup;
+- `Service/NeuronChatHistoryRepository.php`: dedicated BASE3 database persistence;
+- `Service/NeuronConversationKeyFactory.php`: conversation-scope isolation;
 - `Service/NeuronExecutionEventMapper.php`: event translation;
 - `Service/NeuronAgentExecutionService.php`: BASE3 runtime adapter;
 - `Service/NeuronAgentConfigFormService.php`: runtime form normalization;
@@ -69,3 +74,12 @@ absolute endpoint stored in the selected BASE3 connection. The client is injecte
 through the public Neuron provider constructor. No vendored Neuron source file is
 modified. This local adapter and its smoke coverage must be retained during every
 Neuron upgrade.
+
+
+## Chat-history adaptation
+
+Persistent memory is implemented only through Neuron's public
+`AbstractChatHistory` and `AgentInterface::setChatHistory()` APIs. The adapter
+stores Neuron's own serialized message array in
+`base3_neuronai_chathistory`. No upstream message class or history class is
+patched. See `docs/CHAT_HISTORY.md` for schema, locking and upgrade checks.

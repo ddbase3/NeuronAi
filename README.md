@@ -16,7 +16,8 @@ NeuronAi owns:
 - the named `neuronai` runtime implementation;
 - Neuron-specific instructions, tool-run and MCP settings;
 - provider and agent factories;
-- translation of Neuron streaming events into AssistantFoundation events.
+- translation of Neuron streaming events into AssistantFoundation events;
+- Neuron-native persistent chat history through a BASE3 database adapter.
 
 NeuronAi does not own:
 
@@ -59,6 +60,7 @@ All NeuronAi defaults use `IContainer::NOOVERWRITE`:
 
 - `INeuronProviderFactory`;
 - `INeuronAgentFactory`;
+- `INeuronChatHistoryFactory`;
 - `NeuronExecutionEventMapper`;
 - `NeuronAgentExecutionService`;
 - `NeuronAgentConfigFormService`.
@@ -66,6 +68,20 @@ All NeuronAi defaults use `IContainer::NOOVERWRITE`:
 The provider factory depends only on
 `AssistantFoundation\Api\IAiModelConfigurationProvider`. A host can replace
 that provider without changing NeuronAi. See `docs/DI.md`.
+
+## Persistent conversation memory
+
+Chatbot turns provide a stable conversation ID and a server-owned user/session
+scope. NeuronAi attaches a database-backed implementation of Neuron's public
+`AbstractChatHistory` to the agent. Neuron remains responsible for message
+serialization, tool messages, token accounting and context-window trimming.
+
+Histories are stored in `base3_neuronai_chathistory`. The StateStore is used
+only for a short-lived per-conversation lock. A new-chat action creates a new
+conversation ID; the previous history remains available for a later thread-list
+implementation.
+
+See `docs/CHAT_HISTORY.md` for the exact scope, schema and upgrade contract.
 
 ## Existing BASE3 tools through MCP
 
@@ -95,6 +111,7 @@ and transformations are documented in:
 - `docs/ARCHITECTURE.md`;
 - `docs/DI.md`;
 - `docs/DEPENDENCY_ISOLATION.md`;
+- `docs/CHAT_HISTORY.md`;
 - `docs/UPSTREAM_CHANGES.md`;
 - `docs/UPGRADE.md`;
 - `THIRD_PARTY/manifest.json`.

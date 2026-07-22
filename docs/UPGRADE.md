@@ -58,7 +58,10 @@ Review each file listed in `docs/UPSTREAM_CHANGES.md`, especially:
 - stream chunk classes and public properties;
 - `McpConnector` construction and filtering;
 - tool call/result serialization;
-- terminal message content access.
+- terminal message content access;
+- `AbstractChatHistory` protected persistence hooks;
+- message JSON serialization and deserialization;
+- `AgentInterface::setChatHistory()` compatibility.
 
 ## 6. Run checks
 
@@ -79,7 +82,10 @@ Also run the full BASE3/ILIAS integration tests for:
 - runtime registry discovery of both MissionBay and Neuron AI;
 - Chatbot and Agent Admin runtime selection;
 - scheduled jobs honoring the stored runtime;
-- existing records without `agent_runtime` remaining on MissionBay.
+- existing records without `agent_runtime` remaining on MissionBay;
+- persistent Neuron history across separate REST and SSE requests;
+- owner, chatbot and conversation isolation;
+- conversation locking and optimistic-version conflicts.
 
 ## 7. Update documentation
 

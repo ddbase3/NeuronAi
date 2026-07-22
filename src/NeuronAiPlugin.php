@@ -21,11 +21,17 @@ use AssistantFoundation\Api\IAiModelConfigurationProvider;
 use Base3\Api\IContainer;
 use Base3\Api\IPlugin;
 use Base3\Api\IRequest;
+use Base3\Database\Api\IDatabase;
+use Base3\State\Api\IStateStore;
 use NeuronAi\Api\INeuronAgentFactory;
+use NeuronAi\Api\INeuronChatHistoryFactory;
 use NeuronAi\Api\INeuronProviderFactory;
 use NeuronAi\Service\NeuronAgentConfigFormService;
 use NeuronAi\Service\NeuronAgentExecutionService;
 use NeuronAi\Service\NeuronAgentFactory;
+use NeuronAi\Service\NeuronChatHistoryFactory;
+use NeuronAi\Service\NeuronChatHistoryRepository;
+use NeuronAi\Service\NeuronConversationKeyFactory;
 use NeuronAi\Service\NeuronExecutionEventMapper;
 use NeuronAi\Service\NeuronProviderFactory;
 
@@ -53,6 +59,26 @@ class NeuronAiPlugin implements IPlugin {
 				IContainer::SHARED | IContainer::NOOVERWRITE
 			)
 			->set(
+				NeuronConversationKeyFactory::class,
+				fn() => new NeuronConversationKeyFactory(),
+				IContainer::SHARED | IContainer::NOOVERWRITE
+			)
+			->set(
+				NeuronChatHistoryRepository::class,
+				fn($c) => new NeuronChatHistoryRepository($c->get(IDatabase::class)),
+				IContainer::SHARED | IContainer::NOOVERWRITE
+			)
+			->set(
+				INeuronChatHistoryFactory::class,
+				fn($c) => new NeuronChatHistoryFactory(
+					$c->get(NeuronConversationKeyFactory::class),
+					$c->get(NeuronChatHistoryRepository::class),
+					$c->get(IStateStore::class),
+					$c->get(IAiModelConfigurationProvider::class)
+				),
+				IContainer::SHARED | IContainer::NOOVERWRITE
+			)
+			->set(
 				NeuronExecutionEventMapper::class,
 				fn() => new NeuronExecutionEventMapper(),
 				IContainer::SHARED | IContainer::NOOVERWRITE
@@ -61,6 +87,7 @@ class NeuronAiPlugin implements IPlugin {
 				NeuronAgentExecutionService::class,
 				fn($c) => new NeuronAgentExecutionService(
 					$c->get(INeuronAgentFactory::class),
+					$c->get(INeuronChatHistoryFactory::class),
 					$c->get(NeuronExecutionEventMapper::class)
 				),
 				IContainer::SHARED | IContainer::NOOVERWRITE

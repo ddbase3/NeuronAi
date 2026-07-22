@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Buffer Neuron chat-history changes for the duration of one agent run and commit only complete assistant turns.
+- Discard failed or cancelled turns so they cannot leave a persisted user-only message.
+- Repair incomplete history tails created by earlier failed executions when the conversation is loaded.
+- Keep the implementation entirely in the NeuronAi adapter layer without modifying embedded vendor files.
+
 ## 0.4.2 - 2026-07-22
 
 - Added `ConfiguredEndpointHttpClient` so Neuron sends chat requests to the exact endpoint stored in the selected BASE3 connection.

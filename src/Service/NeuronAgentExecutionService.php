@@ -26,6 +26,7 @@ use AssistantFoundation\Dto\AgentExecutionStatus;
 use AssistantFoundation\Dto\AgentResult;
 use AssistantFoundation\Dto\AgentState;
 use NeuronAi\Api\INeuronAgentFactory;
+use NeuronAi\Api\INeuronChatHistoryFactory;
 use NeuronAi\Dto\NeuronAgentConfiguration;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\UserMessage;
 
@@ -38,6 +39,7 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 
 	public function __construct(
 		private readonly INeuronAgentFactory $agentFactory,
+		private readonly INeuronChatHistoryFactory $chatHistoryFactory,
 		private readonly NeuronExecutionEventMapper $eventMapper
 	) {}
 
@@ -78,10 +80,15 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 		$messageId = uniqid('msg_', true);
 		$this->emit($eventSink, 'msgid', ['id' => $messageId]);
 
+		$historyLease = null;
 		try {
-			$handler = $this->agentFactory
-				->create($configuration, $request)
-				->stream(new UserMessage($prompt));
+			$historyLease = $this->chatHistoryFactory->create($configuration, $request);
+			$agent = $this->agentFactory->create($configuration, $request);
+			if ($historyLease !== null) {
+				$agent->setChatHistory($historyLease->getHistory());
+			}
+
+			$handler = $agent->stream(new UserMessage($prompt));
 			$toolCalls = [];
 			$cancelled = false;
 
@@ -99,6 +106,7 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 			}
 
 			if ($cancelled) {
+				$historyLease?->discard();
 				return $this->createResult(
 					$messageId,
 					'',
@@ -114,6 +122,7 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 				throw new \RuntimeException('Neuron AI completed without assistant content.');
 			}
 
+			$historyLease?->commit();
 			$this->emit($eventSink, 'done', ['status' => AgentExecutionStatus::COMPLETED]);
 			return $this->createResult(
 				$messageId,
@@ -123,6 +132,7 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 			);
 		}
 		catch (\Throwable $e) {
+			$historyLease?->discard();
 			$this->emit($eventSink, 'error', [
 				'message' => $e->getMessage(),
 				'type' => get_class($e),
@@ -130,6 +140,9 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 			]);
 			$this->emit($eventSink, 'done', ['status' => AgentExecutionStatus::FAILED]);
 			return $this->createFailureResult($messageId, $e);
+		}
+		finally {
+			$historyLease?->release();
 		}
 	}
 

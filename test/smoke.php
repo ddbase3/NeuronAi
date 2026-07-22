@@ -88,8 +88,18 @@ PHP);
 		'system' => 'Be concise.',
 		'prompt' => 'Say hello.'
 	]);
+	$chatHistoryFactory = new class implements \NeuronAi\Api\INeuronChatHistoryFactory {
+		public static function getName(): string { return 'nullneuronchathistoryfactory'; }
+		public function create(
+			\NeuronAi\Dto\NeuronAgentConfiguration $configuration,
+			\AssistantFoundation\Dto\AgentExecutionRequest $request
+		): ?\NeuronAi\Dto\NeuronChatHistoryLease {
+			return null;
+		}
+	};
 	$service = new \NeuronAi\Service\NeuronAgentExecutionService(
 		new \NeuronAi\Service\NeuronAgentFactory($providerFactory),
+		$chatHistoryFactory,
 		new \NeuronAi\Service\NeuronExecutionEventMapper()
 	);
 	$sink = new \AssistantRuntime\Service\CollectingAgentEventSink();
