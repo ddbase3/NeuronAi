@@ -1,0 +1,20 @@
+<?php
+
+declare (strict_types=1);
+namespace NeuronAi\Vendor\NeuronAI\RAG\Embeddings;
+
+use NeuronAi\Vendor\Aws\BedrockRuntime\BedrockRuntimeClient;
+use function json_decode;
+use function json_encode;
+class AwsBedrockEmbeddingsProvider extends AbstractEmbeddingsProvider
+{
+    public function __construct(protected BedrockRuntimeClient $bedrockRuntimeClient, protected string $model = 'amazon.titan-embed-text-v2:0')
+    {
+    }
+    public function embedText(string $text): array
+    {
+        $response = $this->bedrockRuntimeClient->invokeModel(['modelId' => $this->model, 'contentType' => 'application/json', 'body' => json_encode(['inputText' => $text])]);
+        $response = json_decode((string) $response['body'], \true);
+        return $response['embedding'];
+    }
+}

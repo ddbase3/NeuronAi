@@ -1,0 +1,22 @@
+<?php
+
+declare (strict_types=1);
+namespace NeuronAi\Vendor\NeuronAI\RAG\Embeddings;
+
+use NeuronAi\Vendor\NeuronAI\RAG\Document;
+abstract class AbstractEmbeddingsProvider implements EmbeddingsProviderInterface
+{
+    public function embedDocuments(array $documents): array
+    {
+        foreach ($documents as $index => $document) {
+            $documents[$index] = $this->embedDocument($document);
+        }
+        return $documents;
+    }
+    public function embedDocument(Document $document): Document
+    {
+        $text = $document->formattedContent ?? $document->content;
+        $document->embedding = $this->embedText($text);
+        return $document;
+    }
+}

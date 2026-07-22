@@ -1,0 +1,16 @@
+{
+    "name": "ddbase3/neuronai-vendor-build",
+    "description": "Deterministic scoped vendor build for the BASE3 NeuronAi plugin",
+    "type": "project",
+    "require": {
+        "php": "^8.1",
+        "inspector-apm/neuron-ai": "3.15.26"
+    },
+    "require-dev": {
+        "humbug/php-scoper": "0.18.18"
+    },
+    "config": {
+        "allow-plugins": false,
+        "sort-packages": true
+    }
+}

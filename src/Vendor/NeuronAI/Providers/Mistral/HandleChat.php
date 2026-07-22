@@ -1,0 +1,73 @@
+<?php
+
+declare (strict_types=1);
+namespace NeuronAi\Vendor\NeuronAI\Providers\Mistral;
+
+use NeuronAi\Vendor\NeuronAI\Chat\Enums\MessageRole;
+use NeuronAi\Vendor\NeuronAI\Chat\Enums\SourceType;
+use NeuronAi\Vendor\NeuronAI\Chat\Messages\AssistantMessage;
+use NeuronAi\Vendor\NeuronAI\Chat\Messages\ContentBlocks\AudioContent;
+use NeuronAi\Vendor\NeuronAI\Chat\Messages\ContentBlocks\FileContent;
+use NeuronAi\Vendor\NeuronAI\Chat\Messages\ContentBlocks\ImageContent;
+use NeuronAi\Vendor\NeuronAI\Chat\Messages\ContentBlocks\ReasoningContent;
+use NeuronAi\Vendor\NeuronAI\Chat\Messages\ContentBlocks\TextContent;
+use NeuronAi\Vendor\NeuronAI\Chat\Messages\Message;
+use NeuronAi\Vendor\NeuronAI\Chat\Messages\Usage;
+use NeuronAi\Vendor\NeuronAI\Exceptions\HttpException;
+use NeuronAi\Vendor\NeuronAI\Exceptions\ProviderException;
+use NeuronAi\Vendor\NeuronAI\HttpClient\HttpRequest;
+use function array_filter;
+use function array_reduce;
+use function array_unshift;
+use function is_string;
+trait HandleChat
+{
+    /**
+     * @throws ProviderException
+     * @throws HttpException
+     */
+    public function chat(Message ...$messages): Message
+    {
+        // Include the system prompt
+        if (isset($this->system)) {
+            array_unshift($messages, new Message(MessageRole::SYSTEM, $this->system));
+        }
+        $body = ['model' => $this->model, 'messages' => $this->messageMapper()->map($messages), ...$this->parameters];
+        // Attach tools
+        if (!empty($this->tools)) {
+            $body['tools'] = $this->toolPayloadMapper()->map($this->tools);
+        }
+        $response = $this->httpClient->request(HttpRequest::post(uri: 'chat/completions', body: $body));
+        return $this->processChatResult($response->json());
+    }
+    /**
+     * @throws ProviderException
+     */
+    protected function processChatResult(array $result): AssistantMessage
+    {
+        $choice = $result['choices'][0];
+        if ($choice['finish_reason'] === 'tool_calls') {
+            $response = $this->createToolCallMessage($choice['message']['tool_calls'], new TextContent($choice['message']['content']));
+        } elseif (is_string($choice['message']['content'])) {
+            $response = new AssistantMessage($choice['message']['content']);
+        } else {
+            $blocks = [];
+            foreach ($choice['content'] as $content) {
+                $blocks[] = match ($content['type']) {
+                    'text' => new TextContent($content['text'] ?? ''),
+                    'thinking' => new ReasoningContent(array_reduce(array_filter($content['thinking'], fn(array $item): bool => $item['type'] === 'text'), fn(string $carry, array $item): string => $carry . $item['text'], '')),
+                    'image_url' => new ImageContent($content['image_url']['url'] ?? '', SourceType::BASE64),
+                    'document_url' => new FileContent(content: $content['document_url'] ?? '', sourceType: SourceType::BASE64, filename: $content['document_name'] ?? null),
+                    'input_audio' => new AudioContent($content['input_audio'], SourceType::BASE64),
+                    default => null,
+                };
+            }
+            $response = new AssistantMessage(array_filter($blocks));
+        }
+        if (isset($result['usage'])) {
+            $response->setUsage(new Usage($result['usage']['prompt_tokens'], $result['usage']['completion_tokens']));
+        }
+        $response->setStopReason($choice['finish_reason']);
+        return $response;
+    }
+}

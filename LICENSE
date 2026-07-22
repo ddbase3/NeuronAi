@@ -1,0 +1,6 @@
+NeuronAi plugin code is licensed under the GNU General Public License v3.0.
+
+The embedded third-party packages retain their original licenses. See
+THIRD_PARTY/manifest.json and the package-specific license files below it.
+
+GNU GPL v3: https://www.gnu.org/licenses/gpl-3.0.en.html

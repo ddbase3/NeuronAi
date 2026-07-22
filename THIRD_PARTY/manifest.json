@@ -1,0 +1,255 @@
+{
+    "generated_at": "2026-07-21",
+    "scope_prefix": "NeuronAi\\Vendor",
+    "php_minimum": "8.1",
+    "build_lock_sha256": "eb41fdb97942b3d8a7a74a35f4b2a4139301f235271fabdc9f251b54b8f2e815",
+    "vendor_tree_sha256": "84c6458863537744ee73a27baac869821fa910ee1263148ea3f1ceb4d694767e",
+    "upstream": {
+        "package": "inspector-apm/neuron-ai",
+        "version": "3.15.26",
+        "reference": "ae5be8f065b19c9b7a5adff596b1d04fc07daf67"
+    },
+    "packages": [
+        {
+            "name": "guzzlehttp/guzzle",
+            "version": "7.15.1",
+            "role": "runtime",
+            "embedded": true,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/guzzle/guzzle.git",
+                "reference": "61443dfb33c62f308ee8add20f45b4d6e4bf8d2f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/61443dfb33c62f308ee8add20f45b4d6e4bf8d2f",
+                "reference": "61443dfb33c62f308ee8add20f45b4d6e4bf8d2f",
+                "shasum": ""
+            }
+        },
+        {
+            "name": "guzzlehttp/promises",
+            "version": "2.5.1",
+            "role": "runtime",
+            "embedded": true,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/guzzle/promises.git",
+                "reference": "9ad1e4fc607446a055b95870c7f668e93b5cff29"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/9ad1e4fc607446a055b95870c7f668e93b5cff29",
+                "reference": "9ad1e4fc607446a055b95870c7f668e93b5cff29",
+                "shasum": ""
+            }
+        },
+        {
+            "name": "guzzlehttp/psr7",
+            "version": "2.13.0",
+            "role": "runtime",
+            "embedded": true,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/guzzle/psr7.git",
+                "reference": "dad89620b7a6edb60c15858442eb2e408b45d8f4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/dad89620b7a6edb60c15858442eb2e408b45d8f4",
+                "reference": "dad89620b7a6edb60c15858442eb2e408b45d8f4",
+                "shasum": ""
+            }
+        },
+        {
+            "name": "inspector-apm/inspector-php",
+            "version": "3.18.0",
+            "role": "runtime",
+            "embedded": true,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/inspector-apm/inspector-php.git",
+                "reference": "0eb86241dc91d34c6d8d84716b6d491997af1443"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/inspector-apm/inspector-php/zipball/0eb86241dc91d34c6d8d84716b6d491997af1443",
+                "reference": "0eb86241dc91d34c6d8d84716b6d491997af1443",
+                "shasum": ""
+            }
+        },
+        {
+            "name": "inspector-apm/neuron-ai",
+            "version": "3.15.26",
+            "role": "runtime",
+            "embedded": true,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/neuron-core/neuron-ai.git",
+                "reference": "ae5be8f065b19c9b7a5adff596b1d04fc07daf67"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/neuron-core/neuron-ai/zipball/ae5be8f065b19c9b7a5adff596b1d04fc07daf67",
+                "reference": "ae5be8f065b19c9b7a5adff596b1d04fc07daf67",
+                "shasum": ""
+            }
+        },
+        {
+            "name": "psr/http-client",
+            "version": "1.0.3",
+            "role": "runtime",
+            "embedded": true,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-client.git",
+                "reference": "bb5906edc1c324c9a05aa0873d40117941e5fa90"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-client/zipball/bb5906edc1c324c9a05aa0873d40117941e5fa90",
+                "reference": "bb5906edc1c324c9a05aa0873d40117941e5fa90",
+                "shasum": ""
+            }
+        },
+        {
+            "name": "psr/http-factory",
+            "version": "1.1.0",
+            "role": "runtime",
+            "embedded": true,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-factory.git",
+                "reference": "2b4765fddfe3b508ac62f829e852b1501d3f6e8a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-factory/zipball/2b4765fddfe3b508ac62f829e852b1501d3f6e8a",
+                "reference": "2b4765fddfe3b508ac62f829e852b1501d3f6e8a",
+                "shasum": ""
+            }
+        },
+        {
+            "name": "psr/http-message",
+            "version": "2.0",
+            "role": "runtime",
+            "embedded": true,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-message.git",
+                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/402d35bcb92c70c026d1a6a9883f06b2ead23d71",
+                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71",
+                "shasum": ""
+            }
+        },
+        {
+            "name": "ralouphie/getallheaders",
+            "version": "3.0.3",
+            "role": "runtime",
+            "embedded": true,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ralouphie/getallheaders.git",
+                "reference": "120b605dfeb996808c31b6477290a714d356e822"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ralouphie/getallheaders/zipball/120b605dfeb996808c31b6477290a714d356e822",
+                "reference": "120b605dfeb996808c31b6477290a714d356e822",
+                "shasum": ""
+            }
+        },
+        {
+            "name": "symfony/deprecation-contracts",
+            "version": "v3.7.1",
+            "role": "runtime",
+            "embedded": true,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/deprecation-contracts.git",
+                "reference": "f3202fa1b5097b0af062dc978b32ecf63404e31d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/f3202fa1b5097b0af062dc978b32ecf63404e31d",
+                "reference": "f3202fa1b5097b0af062dc978b32ecf63404e31d",
+                "shasum": ""
+            }
+        },
+        {
+            "name": "symfony/polyfill-php80",
+            "version": "v1.37.0",
+            "role": "platform compatibility dependency",
+            "embedded": false,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-php80.git",
+                "reference": "dfb55726c3a76ea3b6459fcfda1ec2d80a682411"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/dfb55726c3a76ea3b6459fcfda1ec2d80a682411",
+                "reference": "dfb55726c3a76ea3b6459fcfda1ec2d80a682411",
+                "shasum": ""
+            },
+            "not_embedded_reason": "NeuronAi requires PHP 8.1 or newer, so the PHP 8.0 backport is unreachable."
+        },
+        {
+            "name": "symfony/polyfill-mbstring",
+            "version": "v1.38.2",
+            "role": "standalone BASE3 compatibility",
+            "embedded": true,
+            "license": [
+                "MIT"
+            ],
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-mbstring.git",
+                "reference": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6",
+                "reference": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6",
+                "shasum": ""
+            }
+        }
+    ]
+}
