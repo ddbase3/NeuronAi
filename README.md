@@ -14,7 +14,7 @@ NeuronAi owns:
 
 - the pinned and isolated Neuron AI runtime;
 - the named `neuronai` runtime implementation;
-- Neuron-specific instructions, tool-run and MCP settings;
+- Neuron-specific instructions, context-profile, tool-run and MCP settings;
 - provider and agent factories;
 - translation of Neuron streaming events into AssistantFoundation events;
 - Neuron-native persistent chat history through a BASE3 database adapter.
@@ -47,6 +47,7 @@ or credential configuration.
 
 Additional Neuron settings are:
 
+- `context_profile`;
 - `neuron_instructions`;
 - `neuron_max_tool_runs`;
 - `neuron_mcp`.
@@ -83,6 +84,16 @@ implementation.
 
 See `docs/CHAT_HISTORY.md` for the exact scope, schema and upgrade contract.
 
+## Runtime context profiles
+
+Neuron agents select the same single `context_profile` used by MissionBay. The
+profile is resolved for every turn through the runtime-neutral
+`IAgentContextProfileService`. Current time, ILIAS page information and other
+contributions are appended to Neuron instructions and are not persisted in the
+conversation history.
+
+See `docs/CONTEXT_PROFILES.md` for provider boundaries and upgrade checks.
+
 ## Existing BASE3 tools through MCP
 
 The pilot integration can reach an MCP server through non-secret agent
@@ -112,6 +123,7 @@ and transformations are documented in:
 - `docs/DI.md`;
 - `docs/DEPENDENCY_ISOLATION.md`;
 - `docs/CHAT_HISTORY.md`;
+- `docs/CONTEXT_PROFILES.md`;
 - `docs/UPSTREAM_CHANGES.md`;
 - `docs/UPGRADE.md`;
 - `THIRD_PARTY/manifest.json`.

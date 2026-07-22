@@ -17,6 +17,7 @@
 
 namespace NeuronAi;
 
+use AssistantFoundation\Api\IAgentContextProfileService;
 use AssistantFoundation\Api\IAiModelConfigurationProvider;
 use Base3\Api\IContainer;
 use Base3\Api\IPlugin;
@@ -31,6 +32,7 @@ use NeuronAi\Service\NeuronAgentExecutionService;
 use NeuronAi\Service\NeuronAgentFactory;
 use NeuronAi\Service\NeuronChatHistoryFactory;
 use NeuronAi\Service\NeuronChatHistoryRepository;
+use NeuronAi\Service\NeuronContextInstructionsBuilder;
 use NeuronAi\Service\NeuronConversationKeyFactory;
 use NeuronAi\Service\NeuronExecutionEventMapper;
 use NeuronAi\Service\NeuronProviderFactory;
@@ -84,11 +86,18 @@ class NeuronAiPlugin implements IPlugin {
 				IContainer::SHARED | IContainer::NOOVERWRITE
 			)
 			->set(
+				NeuronContextInstructionsBuilder::class,
+				fn() => new NeuronContextInstructionsBuilder(),
+				IContainer::SHARED | IContainer::NOOVERWRITE
+			)
+			->set(
 				NeuronAgentExecutionService::class,
 				fn($c) => new NeuronAgentExecutionService(
 					$c->get(INeuronAgentFactory::class),
 					$c->get(INeuronChatHistoryFactory::class),
-					$c->get(NeuronExecutionEventMapper::class)
+					$c->get(NeuronExecutionEventMapper::class),
+					$c->get(IAgentContextProfileService::class),
+					$c->get(NeuronContextInstructionsBuilder::class)
 				),
 				IContainer::SHARED | IContainer::NOOVERWRITE
 			)
@@ -96,7 +105,8 @@ class NeuronAiPlugin implements IPlugin {
 				NeuronAgentConfigFormService::class,
 				fn($c) => new NeuronAgentConfigFormService(
 					$c->get(IRequest::class),
-					$c->get(IAiModelConfigurationProvider::class)
+					$c->get(IAiModelConfigurationProvider::class),
+					$c->get(IAgentContextProfileService::class)
 				),
 				IContainer::SHARED | IContainer::NOOVERWRITE
 			);

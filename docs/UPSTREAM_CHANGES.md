@@ -38,6 +38,7 @@ Local files to review during every Neuron update:
 - `Service/NeuronChatHistoryRepository.php`: dedicated BASE3 database persistence;
 - `Service/NeuronConversationKeyFactory.php`: conversation-scope isolation;
 - `Service/NeuronExecutionEventMapper.php`: event translation;
+- `Service/NeuronContextInstructionsBuilder.php`: runtime context mapping;
 - `Service/NeuronAgentExecutionService.php`: BASE3 runtime adapter;
 - `Service/NeuronAgentConfigFormService.php`: runtime form normalization;
 - `tpl/Content/NeuronAgentConfigFormSection.php`: runtime form presentation.
@@ -50,6 +51,13 @@ The runtime-neutral configured-LLM contract is located in AssistantFoundation:
 The current adapter for existing BASE3 LLM and connection records is:
 
 - `MissionBay/Service/ConfiguredAiModelConfigurationProvider.php`.
+
+## Context-profile adaptation
+
+Context profiles are resolved through AssistantFoundation contracts and mapped
+to Neuron instructions by `NeuronContextInstructionsBuilder`. The adapter uses
+only the public Neuron `setInstructions()` path. Dynamic context is not stored in
+Neuron chat history. See `docs/CONTEXT_PROFILES.md`.
 
 ## Local architectural rules
 

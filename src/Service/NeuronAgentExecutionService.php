@@ -17,6 +17,7 @@
 
 namespace NeuronAi\Service;
 
+use AssistantFoundation\Api\IAgentContextProfileService;
 use AssistantFoundation\Api\IAgentEventSink;
 use AssistantFoundation\Api\IAgentRuntimeService;
 use AssistantFoundation\Dto\AgentExecutionEvent;
@@ -40,7 +41,9 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 	public function __construct(
 		private readonly INeuronAgentFactory $agentFactory,
 		private readonly INeuronChatHistoryFactory $chatHistoryFactory,
-		private readonly NeuronExecutionEventMapper $eventMapper
+		private readonly NeuronExecutionEventMapper $eventMapper,
+		private readonly IAgentContextProfileService $contextProfileService,
+		private readonly NeuronContextInstructionsBuilder $contextInstructionsBuilder
 	) {}
 
 	public static function getName(): string {
@@ -73,15 +76,29 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 			throw new \InvalidArgumentException('Neuron AI prompt is required.');
 		}
 
-		$configuration = NeuronAgentConfiguration::fromArrays(
-			$request->getAgentConfiguration(),
-			$inputs
-		);
 		$messageId = uniqid('msg_', true);
 		$this->emit($eventSink, 'msgid', ['id' => $messageId]);
 
 		$historyLease = null;
+		$contextWarnings = [];
+		$contextDiagnostics = [];
 		try {
+			$configuration = NeuronAgentConfiguration::fromArrays(
+				$request->getAgentConfiguration(),
+				$inputs
+			);
+			$contextResult = $this->contextProfileService->build(
+				$configuration->getContextProfile(),
+				$request
+			);
+			$configuration = $configuration->withInstructions(
+				$this->contextInstructionsBuilder->build(
+					$configuration->getInstructions(),
+					$contextResult
+				)
+			);
+			$contextWarnings = $contextResult->getWarnings();
+			$contextDiagnostics = $contextResult->getDiagnostics();
 			$historyLease = $this->chatHistoryFactory->create($configuration, $request);
 			$agent = $this->agentFactory->create($configuration, $request);
 			if ($historyLease !== null) {
@@ -112,7 +129,7 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 					'',
 					AgentExecutionStatus::PARTIAL,
 					$toolCalls,
-					['Execution was cancelled by the event sink.']
+					array_merge($contextWarnings, ['Execution was cancelled by the event sink.'])
 				);
 			}
 
@@ -128,7 +145,9 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 				$messageId,
 				$content,
 				AgentExecutionStatus::COMPLETED,
-				$toolCalls
+				$toolCalls,
+				$contextWarnings,
+				$contextDiagnostics
 			);
 		}
 		catch (\Throwable $e) {
@@ -139,7 +158,7 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 				'code' => $e->getCode()
 			]);
 			$this->emit($eventSink, 'done', ['status' => AgentExecutionStatus::FAILED]);
-			return $this->createFailureResult($messageId, $e);
+			return $this->createFailureResult($messageId, $e, $contextWarnings);
 		}
 		finally {
 			$historyLease?->release();
@@ -163,7 +182,8 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 		string $content,
 		string $status,
 		array $toolCalls = [],
-		array $warnings = []
+		array $warnings = [],
+		array $contextDiagnostics = []
 	): AgentExecutionResult {
 		$message = [
 			'id' => $messageId,
@@ -181,12 +201,20 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 			$status,
 			AgentState::empty(),
 			$output,
-			['runtime' => 'neuronai']
+			[
+				'runtime' => 'neuronai',
+				'context_profile' => $contextDiagnostics
+			]
 		);
 		return new AgentExecutionResult($output, $warnings, $agentResult);
 	}
 
-	private function createFailureResult(string $messageId, \Throwable $error): AgentExecutionResult {
+	/** @param array<int,string> $warnings */
+	private function createFailureResult(
+		string $messageId,
+		\Throwable $error,
+		array $warnings = []
+	): AgentExecutionResult {
 		$output = [
 			self::ASSISTANT_OUTPUT_ID => [
 				'error' => $error->getMessage(),
@@ -203,7 +231,7 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 				'error_type' => get_class($error)
 			]
 		);
-		return new AgentExecutionResult($output, [], $agentResult);
+		return new AgentExecutionResult($output, $warnings, $agentResult);
 	}
 
 	/** @param array<string,mixed> $values */

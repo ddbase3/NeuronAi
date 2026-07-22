@@ -17,6 +17,7 @@
 
 namespace NeuronAi\Service;
 
+use AssistantFoundation\Api\IAgentContextProfileService;
 use AssistantFoundation\Api\IAgentRuntimeConfigFormService;
 use AssistantFoundation\Api\IAiModelConfigurationProvider;
 use Base3\Api\IRequest;
@@ -26,7 +27,8 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 
 	public function __construct(
 		private readonly IRequest $request,
-		private readonly IAiModelConfigurationProvider $modelConfigurationProvider
+		private readonly IAiModelConfigurationProvider $modelConfigurationProvider,
+		private readonly IAgentContextProfileService $contextProfileService
 	) {}
 
 	public static function getName(): string {
@@ -40,6 +42,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 	public function getDefaultSettings(): array {
 		return [
 			'llm' => '',
+			'context_profile' => '',
 			'neuron_instructions' => '',
 			'neuron_max_tool_runs' => 10,
 			'neuron_mcp' => []
@@ -51,6 +54,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 
 		return [
 			'llm' => $this->normalizeTechnicalKey((string)($settings['llm'] ?? $defaults['llm'])),
+			'context_profile' => $this->normalizeTechnicalKey((string)($settings['context_profile'] ?? $defaults['context_profile'])),
 			'neuron_instructions' => $this->normalizeTextBlock($this->readString($settings, 'neuron_instructions')),
 			'neuron_max_tool_runs' => $this->normalizePositiveInt(
 				$settings['neuron_max_tool_runs'] ?? $defaults['neuron_max_tool_runs'],
@@ -80,8 +84,14 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 			$errors[] = 'Neuron MCP configuration must not contain credentials or secrets.';
 		}
 
+		$contextProfile = $this->normalizeTechnicalKey((string)$this->request->request('context_profile', ''));
+		if ($contextProfile !== '' && !$this->contextProfileService->hasProfile($contextProfile)) {
+			$errors[] = 'Selected context profile is not available: ' . $contextProfile;
+		}
+
 		return $this->normalizeSettings([
 			'llm' => $llm,
+			'context_profile' => $contextProfile,
 			'neuron_instructions' => (string)$this->request->request('neuron_instructions', ''),
 			'neuron_max_tool_runs' => $this->request->request('neuron_max_tool_runs', 10),
 			'neuron_mcp' => $mcp
@@ -91,6 +101,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 	public function getPostedViewValues(): array {
 		return $this->settingsToViewValues([
 			'llm' => $this->request->request('llm', ''),
+			'context_profile' => $this->request->request('context_profile', ''),
 			'neuron_instructions' => $this->request->request('neuron_instructions', ''),
 			'neuron_max_tool_runs' => $this->request->request('neuron_max_tool_runs', 10),
 			'neuron_mcp' => $this->decodeJsonObjectSilently((string)$this->request->request('neuron_mcp', ''))
@@ -136,7 +147,8 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 		return [
 			'form_id' => $formId,
 			'values' => $values,
-			'llm_options' => $this->modelConfigurationProvider->getOptions()
+			'llm_options' => $this->modelConfigurationProvider->getOptions(),
+			'context_profile_options' => $this->contextProfileService->getOptions()
 		];
 	}
 

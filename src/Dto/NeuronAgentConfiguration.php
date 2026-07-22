@@ -28,6 +28,7 @@ final class NeuronAgentConfiguration {
 	public function __construct(
 		private readonly string $llmId,
 		private readonly string $instructions,
+		private readonly string $contextProfile = '',
 		private readonly int $maxToolRuns = self::DEFAULT_MAX_TOOL_RUNS,
 		private readonly ?array $mcp = null
 	) {}
@@ -43,6 +44,7 @@ final class NeuronAgentConfiguration {
 			'neuron_instructions',
 			self::readString($inputs, 'system')
 		);
+		$contextProfile = self::normalizeKey(self::readString($agentConfiguration, 'context_profile'));
 		$maxToolRuns = self::readPositiveInt(
 			$agentConfiguration,
 			'neuron_max_tool_runs',
@@ -56,12 +58,23 @@ final class NeuronAgentConfiguration {
 			throw new \InvalidArgumentException('Neuron AI requires a configured LLM.');
 		}
 
-		return new self($llmId, $instructions, $maxToolRuns, $mcp);
+		return new self($llmId, $instructions, $contextProfile, $maxToolRuns, $mcp);
 	}
 
 	public function getLlmId(): string { return $this->llmId; }
 	public function getInstructions(): string { return $this->instructions; }
+	public function getContextProfile(): string { return $this->contextProfile; }
 	public function getMaxToolRuns(): int { return $this->maxToolRuns; }
+
+	public function withInstructions(string $instructions): self {
+		return new self(
+			$this->llmId,
+			trim($instructions),
+			$this->contextProfile,
+			$this->maxToolRuns,
+			$this->mcp
+		);
+	}
 	/** @return array<string,mixed>|null */ public function getMcp(): ?array { return $this->mcp; }
 
 	/** @param array<string,mixed> $values */

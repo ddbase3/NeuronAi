@@ -56,7 +56,9 @@ PHP);
 
 	$provider = new class implements \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface {
 
-		public function systemPrompt(?string $prompt): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface { return $this; }
+		public ?string $lastSystemPrompt = null;
+
+		public function systemPrompt(?string $prompt): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface { $this->lastSystemPrompt = $prompt; return $this; }
 		public function setTools(array $tools): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface { return $this; }
 		public function messageMapper(): \NeuronAi\Vendor\NeuronAI\Providers\MessageMapperInterface { throw new \LogicException('Not used by the smoke provider.'); }
 		public function toolPayloadMapper(): \NeuronAi\Vendor\NeuronAI\Providers\ToolMapperInterface { throw new \LogicException('Not used by the smoke provider.'); }
@@ -83,7 +85,8 @@ PHP);
 	};
 
 	$request = new \AssistantFoundation\Dto\AgentExecutionRequest([
-		'llm' => 'fake-llm'
+		'llm' => 'fake-llm',
+		'context_profile' => 'smoke-context'
 	], [
 		'system' => 'Be concise.',
 		'prompt' => 'Say hello.'
@@ -97,10 +100,31 @@ PHP);
 			return null;
 		}
 	};
+	$contextProfileService = new class implements \AssistantFoundation\Api\IAgentContextProfileService {
+		public static function getName(): string { return 'emptyagentcontextprofileservice'; }
+		public function getOptions(): array { return [['id' => 'smoke-context', 'label' => 'Smoke context']]; }
+		public function hasProfile(string $profileId): bool { return $profileId === 'smoke-context'; }
+		public function build(
+			string $profileId,
+			\AssistantFoundation\Dto\AgentExecutionRequest $request
+		): \AssistantFoundation\Dto\AgentContextProfileResult {
+			return new \AssistantFoundation\Dto\AgentContextProfileResult(
+				$profileId,
+				[new \AssistantFoundation\Dto\AgentInstructionBlock(
+					'smoke-current-page',
+					'Current page is Smoke Test.',
+					10,
+					'smoke'
+				)]
+			);
+		}
+	};
 	$service = new \NeuronAi\Service\NeuronAgentExecutionService(
 		new \NeuronAi\Service\NeuronAgentFactory($providerFactory),
 		$chatHistoryFactory,
-		new \NeuronAi\Service\NeuronExecutionEventMapper()
+		new \NeuronAi\Service\NeuronExecutionEventMapper(),
+		$contextProfileService,
+		new \NeuronAi\Service\NeuronContextInstructionsBuilder()
 	);
 	$sink = new \AssistantRuntime\Service\CollectingAgentEventSink();
 	$result = $service->execute($request, $sink);
@@ -112,6 +136,10 @@ PHP);
 	}
 	if ($events !== ['msgid', 'token', 'token', 'done']) {
 		throw new \RuntimeException('Unexpected events: ' . json_encode($events));
+	}
+
+	if (!is_string($provider->lastSystemPrompt) || !str_contains($provider->lastSystemPrompt, 'Current page is Smoke Test.')) {
+		throw new \RuntimeException('Context profile was not added to Neuron instructions.');
 	}
 
 	$modelProvider = new class implements \AssistantFoundation\Api\IAiModelConfigurationProvider {
