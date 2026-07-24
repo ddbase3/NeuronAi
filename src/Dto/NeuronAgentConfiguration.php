@@ -24,11 +24,15 @@ final class NeuronAgentConfiguration {
 
 	private const DEFAULT_MAX_TOOL_RUNS = 10;
 
-	/** @param array<string,mixed>|null $mcp */
+	/**
+	 * @param array<int,string> $toolProfiles
+	 * @param array<string,mixed>|null $mcp
+	 */
 	public function __construct(
 		private readonly string $llmId,
 		private readonly string $instructions,
 		private readonly string $contextProfile = '',
+		private readonly array $toolProfiles = [],
 		private readonly int $maxToolRuns = self::DEFAULT_MAX_TOOL_RUNS,
 		private readonly ?array $mcp = null
 	) {}
@@ -45,12 +49,16 @@ final class NeuronAgentConfiguration {
 			self::readString($inputs, 'system')
 		);
 		$contextProfile = self::normalizeKey(self::readString($agentConfiguration, 'context_profile'));
+		$suggestions = self::readString($inputs, 'mode') === 'suggestions';
+		$toolProfiles = $suggestions
+			? []
+			: self::normalizeKeyList(self::readArray($agentConfiguration, 'tool_profiles'));
 		$maxToolRuns = self::readPositiveInt(
 			$agentConfiguration,
 			'neuron_max_tool_runs',
 			self::DEFAULT_MAX_TOOL_RUNS
 		);
-		$mcp = self::readString($inputs, 'mode') === 'suggestions'
+		$mcp = $suggestions
 			? null
 			: self::normalizeMcp(self::readArray($agentConfiguration, 'neuron_mcp'));
 
@@ -58,12 +66,13 @@ final class NeuronAgentConfiguration {
 			throw new \InvalidArgumentException('Neuron AI requires a configured LLM.');
 		}
 
-		return new self($llmId, $instructions, $contextProfile, $maxToolRuns, $mcp);
+		return new self($llmId, $instructions, $contextProfile, $toolProfiles, $maxToolRuns, $mcp);
 	}
 
 	public function getLlmId(): string { return $this->llmId; }
 	public function getInstructions(): string { return $this->instructions; }
 	public function getContextProfile(): string { return $this->contextProfile; }
+	/** @return array<int,string> */ public function getToolProfiles(): array { return $this->toolProfiles; }
 	public function getMaxToolRuns(): int { return $this->maxToolRuns; }
 
 	public function withInstructions(string $instructions): self {
@@ -71,11 +80,16 @@ final class NeuronAgentConfiguration {
 			$this->llmId,
 			trim($instructions),
 			$this->contextProfile,
+			$this->toolProfiles,
 			$this->maxToolRuns,
 			$this->mcp
 		);
 	}
-	/** @return array<string,mixed>|null */ public function getMcp(): ?array { return $this->mcp; }
+
+	/** @return array<string,mixed>|null */
+	public function getMcp(): ?array {
+		return $this->mcp;
+	}
 
 	/** @param array<string,mixed> $values */
 	private static function readString(array $values, string $key, string $default = ''): string {
@@ -116,6 +130,18 @@ final class NeuronAgentConfiguration {
 
 		unset($mcp['token'], $mcp['authorization'], $mcp['api_key']);
 		return $mcp;
+	}
+
+	/** @param array<int,mixed> $values @return array<int,string> */
+	private static function normalizeKeyList(array $values): array {
+		$result = [];
+		foreach ($values as $value) {
+			$value = self::normalizeKey(is_scalar($value) || $value === null ? (string)$value : '');
+			if ($value !== '') {
+				$result[$value] = $value;
+			}
+		}
+		return array_values($result);
 	}
 
 	private static function normalizeKey(string $value): string {

@@ -5,10 +5,12 @@ $agentConfigForm = is_array($runtimeAgentConfigForm ?? null)
 $values = is_array($agentConfigForm['values'] ?? null) ? $agentConfigForm['values'] : [];
 $llmOptions = is_array($agentConfigForm['llm_options'] ?? null) ? $agentConfigForm['llm_options'] : [];
 $contextProfileOptions = is_array($agentConfigForm['context_profile_options'] ?? null) ? $agentConfigForm['context_profile_options'] : [];
+$toolProfileOptions = is_array($agentConfigForm['tool_profile_options'] ?? null) ? $agentConfigForm['tool_profile_options'] : [];
 $formId = (string)($agentConfigForm['form_id'] ?? 'base3_neuron_agent_config');
 $rootId = $formId . '_section';
 $e = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $selected = static fn($current, $value): string => (string)$current === (string)$value ? ' selected="selected"' : '';
+$selectedIn = static fn($current, $value): string => in_array((string)$value, array_map('strval', is_array($current) ? $current : []), true) ? ' selected="selected"' : '';
 ?>
 <style>
 .base3-neuron-config-root * { box-sizing:border-box; }
@@ -63,6 +65,23 @@ $selected = static fn($current, $value): string => (string)$current === (string)
 				<p class="base3-neuron-config-help">The selected profile is resolved for every turn. Dynamic page, time and user context is not stored in the conversation history.</p>
 			</div>
 		</div>
+		<div class="base3-neuron-config-row">
+			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_tool_profiles">Tool profiles</label>
+			<div>
+				<select id="<?php echo $e($formId); ?>_tool_profiles" name="tool_profiles[]" multiple size="6">
+<?php foreach ($toolProfileOptions as $profile) {
+	$id = (string)($profile['id'] ?? '');
+	if ($id === '') continue;
+	$label = (string)($profile['label'] ?? $id);
+	$description = trim((string)($profile['description'] ?? ''));
+	$toolCount = (int)($profile['tool_count'] ?? 0);
+?>
+					<option value="<?php echo $e($id); ?>"<?php echo $selectedIn($values['tool_profiles'] ?? [], $id); ?>><?php echo $e($label . ' (' . $toolCount . ')' . ($description !== '' ? ' — ' . $description : '')); ?></option>
+<?php } ?>
+				</select>
+				<p class="base3-neuron-config-help">Selected profiles are shared with MissionBay. Explicitly read-only functions run directly. Mutations are available only when they require approval and satisfy the configured commit-guard rules.</p>
+			</div>
+		</div>
 	</div>
 
 	<div class="base3-neuron-config-section">
@@ -86,7 +105,8 @@ $selected = static fn($current, $value): string => (string)$current === (string)
 (function(){
 	var root=document.getElementById(<?php echo json_encode($rootId); ?>);if(!root||root.dataset.ready==='1')return;root.dataset.ready='1';
 	function setValue(name,value){var field=root.querySelector('[name="'+name.replace(/"/g,'\\"')+'"]');if(field)field.value=value==null?'':String(value)}
-	root.__base3AgentRuntimeConfigUpdateValues=function(values){values=values&&typeof values==='object'?values:{};setValue('llm',values.llm||'');setValue('context_profile',values.context_profile||'');setValue('neuron_instructions',values.neuron_instructions||'');setValue('neuron_max_tool_runs',values.neuron_max_tool_runs==null?10:values.neuron_max_tool_runs);setValue('neuron_mcp',values.neuron_mcp_json||'{}')};
+	function setMulti(name,values){values=Array.isArray(values)?values.map(String):[];root.querySelectorAll('[name="'+name.replace(/"/g,'\\"')+'"] option').forEach(function(option){option.selected=values.indexOf(String(option.value))!==-1})}
+	root.__base3AgentRuntimeConfigUpdateValues=function(values){values=values&&typeof values==='object'?values:{};setValue('llm',values.llm||'');setValue('context_profile',values.context_profile||'');setMulti('tool_profiles[]',values.tool_profiles||[]);setValue('neuron_instructions',values.neuron_instructions||'');setValue('neuron_max_tool_runs',values.neuron_max_tool_runs==null?10:values.neuron_max_tool_runs);setValue('neuron_mcp',values.neuron_mcp_json||'{}')};
 	root.__base3AgentRuntimeConfigPrepareSubmit=function(){return true};
 })();
 </script>

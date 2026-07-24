@@ -18,6 +18,8 @@
 namespace NeuronAi;
 
 use AssistantFoundation\Api\IAgentContextProfileService;
+use AssistantFoundation\Api\IAgentSuspensionRepository;
+use AssistantFoundation\Api\IAgentToolProfileService;
 use AssistantFoundation\Api\IAiModelConfigurationProvider;
 use Base3\Api\IContainer;
 use Base3\Api\IPlugin;
@@ -30,6 +32,7 @@ use NeuronAi\Api\INeuronProviderFactory;
 use NeuronAi\Service\NeuronAgentConfigFormService;
 use NeuronAi\Service\NeuronAgentExecutionService;
 use NeuronAi\Service\NeuronAgentFactory;
+use NeuronAi\Service\NeuronAgentToolFactory;
 use NeuronAi\Service\NeuronChatHistoryFactory;
 use NeuronAi\Service\NeuronChatHistoryRepository;
 use NeuronAi\Service\NeuronContextInstructionsBuilder;
@@ -56,8 +59,16 @@ class NeuronAiPlugin implements IPlugin {
 				IContainer::SHARED | IContainer::NOOVERWRITE
 			)
 			->set(
+				NeuronAgentToolFactory::class,
+				fn() => new NeuronAgentToolFactory(),
+				IContainer::SHARED | IContainer::NOOVERWRITE
+			)
+			->set(
 				INeuronAgentFactory::class,
-				fn($c) => new NeuronAgentFactory($c->get(INeuronProviderFactory::class)),
+				fn($c) => new NeuronAgentFactory(
+					$c->get(INeuronProviderFactory::class),
+					$c->get(NeuronAgentToolFactory::class)
+				),
 				IContainer::SHARED | IContainer::NOOVERWRITE
 			)
 			->set(
@@ -97,7 +108,10 @@ class NeuronAiPlugin implements IPlugin {
 					$c->get(INeuronChatHistoryFactory::class),
 					$c->get(NeuronExecutionEventMapper::class),
 					$c->get(IAgentContextProfileService::class),
-					$c->get(NeuronContextInstructionsBuilder::class)
+					$c->get(IAgentToolProfileService::class),
+					$c->get(NeuronContextInstructionsBuilder::class),
+					$c->get(IAgentSuspensionRepository::class),
+					$c->get(NeuronAgentToolFactory::class)
 				),
 				IContainer::SHARED | IContainer::NOOVERWRITE
 			)
@@ -106,7 +120,8 @@ class NeuronAiPlugin implements IPlugin {
 				fn($c) => new NeuronAgentConfigFormService(
 					$c->get(IRequest::class),
 					$c->get(IAiModelConfigurationProvider::class),
-					$c->get(IAgentContextProfileService::class)
+					$c->get(IAgentContextProfileService::class),
+					$c->get(IAgentToolProfileService::class)
 				),
 				IContainer::SHARED | IContainer::NOOVERWRITE
 			);

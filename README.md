@@ -127,3 +127,11 @@ and transformations are documented in:
 - `docs/UPSTREAM_CHANGES.md`;
 - `docs/UPGRADE.md`;
 - `THIRD_PARTY/manifest.json`.
+
+## Direct BASE3 tools
+
+Neuron agents can select the same stored tool profiles as MissionBay. The
+current direct adapter exposes only functions explicitly marked
+`readOnlyHint=true`; mutation and unclassified functions remain unavailable
+until the shared approval and resume lifecycle is implemented. External MCP
+servers remain available independently. See `docs/TOOLS.md`.

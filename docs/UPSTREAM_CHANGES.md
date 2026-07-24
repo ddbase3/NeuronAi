@@ -32,11 +32,13 @@ Local files to review during every Neuron update:
 - `Api/INeuronChatHistoryFactory.php`: persistent history extension point;
 - `Dto/NeuronAgentConfiguration.php`: configured-LLM and runtime normalization;
 - `Service/NeuronProviderFactory.php`: maps normalized configured LLMs to Neuron providers;
-- `Service/NeuronAgentFactory.php`: agent and optional MCP setup;
+- `Service/NeuronAgentFactory.php`: agent, direct BASE3 tools and optional MCP setup;
 - `Chat/History/DatabaseNeuronChatHistory.php`: public `AbstractChatHistory` adapter;
 - `Service/NeuronChatHistoryFactory.php`: history, locking and context-window setup;
 - `Service/NeuronChatHistoryRepository.php`: dedicated BASE3 database persistence;
 - `Service/NeuronConversationKeyFactory.php`: conversation-scope isolation;
+- `Service/NeuronAgentToolFactory.php`: native Neuron tool creation;
+- `Tool/NeuronAgentTool.php`: runtime-neutral capability adapter;
 - `Service/NeuronExecutionEventMapper.php`: event translation;
 - `Service/NeuronContextInstructionsBuilder.php`: runtime context mapping;
 - `Service/NeuronAgentExecutionService.php`: BASE3 runtime adapter;
@@ -67,8 +69,8 @@ Neuron chat history. See `docs/CONTEXT_PROFILES.md`.
 - Runtime selection is owned by `AssistantRuntime`, not NeuronAi.
 - Chatbot transport and POST→ID→GET long-prompt handling remain outside
   NeuronAi.
-- Existing tools are currently connected through MCP. Direct shared tool
-  execution remains a later step.
+- Local BASE3 tools use the direct shared profile path. External MCP servers
+  remain available independently.
 
 ## BASE3 endpoint adaptation
 
@@ -91,3 +93,12 @@ Persistent memory is implemented only through Neuron's public
 stores Neuron's own serialized message array in
 `base3_neuronai_chathistory`. No upstream message class or history class is
 patched. See `docs/CHAT_HISTORY.md` for schema, locking and upgrade checks.
+
+## Direct BASE3 tool adaptation
+
+Selected tool profiles are resolved through AssistantFoundation contracts.
+`NeuronAgentTool` maps an existing `AgentCapability` to Neuron's public `Tool`
+API and delegates execution to the run-local `IAgentToolSet`. Explicit mutations
+use the existing BASE3 suspension, approval and commit-guard contracts. Resume
+continuation is represented with Neuron's public `ToolCallMessage` and
+`ToolResultMessage` APIs. See `docs/TOOLS.md`.

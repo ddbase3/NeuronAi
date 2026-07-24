@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added direct read-only BASE3 tool profiles through runtime-neutral capability and execution contracts.
+- Added native Neuron tool adapters without changing the embedded Neuron runtime.
+- Added `tool.started`, `tool.finished` and `tool.failed` event coverage for direct tools.
+- Kept mutation, approval and resume tools excluded from this phase.
 - Buffer Neuron chat-history changes for the duration of one agent run and commit only complete assistant turns.
 - Discard failed or cancelled turns so they cannot leave a persisted user-only message.
 - Repair incomplete history tails created by earlier failed executions when the conversation is loaded.

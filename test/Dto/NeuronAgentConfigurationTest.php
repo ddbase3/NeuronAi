@@ -11,6 +11,7 @@ final class NeuronAgentConfigurationTest extends TestCase {
 		$configuration = NeuronAgentConfiguration::fromArrays([
 			'llm' => 'test-llm',
 			'context_profile' => 'ilias-default',
+			'tool_profiles' => ['read-tools', 'reporting'],
 			'neuron_max_tool_runs' => 4
 		], [
 			'system' => 'System instructions'
@@ -19,6 +20,7 @@ final class NeuronAgentConfigurationTest extends TestCase {
 		self::assertSame('test-llm', $configuration->getLlmId());
 		self::assertSame('System instructions', $configuration->getInstructions());
 		self::assertSame('ilias-default', $configuration->getContextProfile());
+		self::assertSame(['read-tools', 'reporting'], $configuration->getToolProfiles());
 		self::assertSame(4, $configuration->getMaxToolRuns());
 	}
 

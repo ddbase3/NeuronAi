@@ -19,6 +19,7 @@ namespace NeuronAi\Service;
 
 use AssistantFoundation\Api\IAgentContextProfileService;
 use AssistantFoundation\Api\IAgentRuntimeConfigFormService;
+use AssistantFoundation\Api\IAgentToolProfileService;
 use AssistantFoundation\Api\IAiModelConfigurationProvider;
 use Base3\Api\IRequest;
 use JsonException;
@@ -28,7 +29,8 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 	public function __construct(
 		private readonly IRequest $request,
 		private readonly IAiModelConfigurationProvider $modelConfigurationProvider,
-		private readonly IAgentContextProfileService $contextProfileService
+		private readonly IAgentContextProfileService $contextProfileService,
+		private readonly IAgentToolProfileService $toolProfileService
 	) {}
 
 	public static function getName(): string {
@@ -43,6 +45,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 		return [
 			'llm' => '',
 			'context_profile' => '',
+			'tool_profiles' => [],
 			'neuron_instructions' => '',
 			'neuron_max_tool_runs' => 10,
 			'neuron_mcp' => []
@@ -55,6 +58,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 		return [
 			'llm' => $this->normalizeTechnicalKey((string)($settings['llm'] ?? $defaults['llm'])),
 			'context_profile' => $this->normalizeTechnicalKey((string)($settings['context_profile'] ?? $defaults['context_profile'])),
+			'tool_profiles' => $this->normalizeTechnicalKeyList($settings['tool_profiles'] ?? $defaults['tool_profiles']),
 			'neuron_instructions' => $this->normalizeTextBlock($this->readString($settings, 'neuron_instructions')),
 			'neuron_max_tool_runs' => $this->normalizePositiveInt(
 				$settings['neuron_max_tool_runs'] ?? $defaults['neuron_max_tool_runs'],
@@ -89,9 +93,17 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 			$errors[] = 'Selected context profile is not available: ' . $contextProfile;
 		}
 
+		$toolProfiles = $this->normalizeTechnicalKeyList($this->request->request('tool_profiles', []));
+		foreach ($toolProfiles as $toolProfile) {
+			if (!$this->toolProfileService->hasProfile($toolProfile)) {
+				$errors[] = 'Selected tool profile is not available for internal agents: ' . $toolProfile;
+			}
+		}
+
 		return $this->normalizeSettings([
 			'llm' => $llm,
 			'context_profile' => $contextProfile,
+			'tool_profiles' => $toolProfiles,
 			'neuron_instructions' => (string)$this->request->request('neuron_instructions', ''),
 			'neuron_max_tool_runs' => $this->request->request('neuron_max_tool_runs', 10),
 			'neuron_mcp' => $mcp
@@ -102,6 +114,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 		return $this->settingsToViewValues([
 			'llm' => $this->request->request('llm', ''),
 			'context_profile' => $this->request->request('context_profile', ''),
+			'tool_profiles' => $this->request->request('tool_profiles', []),
 			'neuron_instructions' => $this->request->request('neuron_instructions', ''),
 			'neuron_max_tool_runs' => $this->request->request('neuron_max_tool_runs', 10),
 			'neuron_mcp' => $this->decodeJsonObjectSilently((string)$this->request->request('neuron_mcp', ''))
@@ -148,7 +161,8 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 			'form_id' => $formId,
 			'values' => $values,
 			'llm_options' => $this->modelConfigurationProvider->getOptions(),
-			'context_profile_options' => $this->contextProfileService->getOptions()
+			'context_profile_options' => $this->contextProfileService->getOptions(),
+			'tool_profile_options' => $this->toolProfileService->getOptions()
 		];
 	}
 
@@ -222,6 +236,21 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 	private function normalizeTechnicalKey(string $value): string {
 		$value = strtolower(trim($value));
 		return preg_replace('/[^a-z0-9._-]+/', '', $value) ?? '';
+	}
+
+	/** @return array<int,string> */
+	private function normalizeTechnicalKeyList(mixed $values): array {
+		if (!is_array($values)) {
+			return [];
+		}
+		$result = [];
+		foreach ($values as $value) {
+			$value = $this->normalizeTechnicalKey(is_scalar($value) || $value === null ? (string)$value : '');
+			if ($value !== '') {
+				$result[$value] = $value;
+			}
+		}
+		return array_values($result);
 	}
 
 	/** @param array<int,string> $errors @return array<string,mixed> */

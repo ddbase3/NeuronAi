@@ -17,6 +17,7 @@
 
 namespace NeuronAi\Api;
 
+use AssistantFoundation\Api\IAgentToolSet;
 use AssistantFoundation\Dto\AgentExecutionRequest;
 use Base3\Api\IBase;
 use NeuronAi\Dto\NeuronAgentConfiguration;
@@ -33,6 +34,7 @@ interface INeuronAgentFactory extends IBase {
 
 	public function create(
 		NeuronAgentConfiguration $configuration,
-		AgentExecutionRequest $request
+		AgentExecutionRequest $request,
+		?IAgentToolSet $toolSet = null
 	): AgentInterface;
 }
