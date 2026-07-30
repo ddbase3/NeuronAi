@@ -22,12 +22,17 @@ use AssistantFoundation\Api\IAgentRuntimeConfigFormService;
 use AssistantFoundation\Api\IAgentToolProfileService;
 use AssistantFoundation\Api\IAiModelConfigurationProvider;
 use Base3\Api\IRequest;
+use Base3\Language\Api\ILanguage;
 use JsonException;
 
 final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormService {
 
+	/** @var array<string,string>|null */
+	private ?array $translations = null;
+
 	public function __construct(
 		private readonly IRequest $request,
+		private readonly ILanguage $language,
 		private readonly IAiModelConfigurationProvider $modelConfigurationProvider,
 		private readonly IAgentContextProfileService $contextProfileService,
 		private readonly IAgentToolProfileService $toolProfileService
@@ -74,29 +79,29 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 		$llm = $this->normalizeTechnicalKey((string)$this->request->request('llm', ''));
 		$mcp = $this->decodeJsonObject(
 			(string)$this->request->request('neuron_mcp', ''),
-			'Neuron MCP configuration',
+			$this->translate('mcp_label', 'Neuron MCP configuration'),
 			$errors
 		);
 
 		if ($llm === '') {
-			$errors[] = 'Please select a configured LLM for Neuron AI.';
+			$errors[] = $this->translate('select_llm_error', 'Please select a configured LLM for Neuron AI.');
 		}
 		elseif (!$this->modelConfigurationProvider->has($llm)) {
-			$errors[] = 'Selected LLM is not available or cannot be resolved: ' . $llm;
+			$errors[] = sprintf($this->translate('llm_missing_error', 'Selected LLM is not available or cannot be resolved: %s'), $llm);
 		}
 		if ($this->containsSensitiveConfiguration($mcp)) {
-			$errors[] = 'Neuron MCP configuration must not contain credentials or secrets.';
+			$errors[] = $this->translate('mcp_secret_error', 'Neuron MCP configuration must not contain credentials or secrets.');
 		}
 
 		$contextProfile = $this->normalizeTechnicalKey((string)$this->request->request('context_profile', ''));
 		if ($contextProfile !== '' && !$this->contextProfileService->hasProfile($contextProfile)) {
-			$errors[] = 'Selected context profile is not available: ' . $contextProfile;
+			$errors[] = sprintf($this->translate('context_missing_error', 'Selected context profile is not available: %s'), $contextProfile);
 		}
 
 		$toolProfiles = $this->normalizeTechnicalKeyList($this->request->request('tool_profiles', []));
 		foreach ($toolProfiles as $toolProfile) {
 			if (!$this->toolProfileService->hasProfile($toolProfile)) {
-				$errors[] = 'Selected tool profile is not available for internal agents: ' . $toolProfile;
+				$errors[] = sprintf($this->translate('tool_profile_missing_error', 'Selected tool profile is not available for internal agents: %s'), $toolProfile);
 			}
 		}
 
@@ -162,8 +167,40 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 			'values' => $values,
 			'llm_options' => $this->modelConfigurationProvider->getOptions(),
 			'context_profile_options' => $this->contextProfileService->getOptions(),
-			'tool_profile_options' => $this->toolProfileService->getOptions()
+			'tool_profile_options' => $this->toolProfileService->getOptions(),
+			'translations' => $this->getTranslations()
 		];
+	}
+
+	/** @return array<string,string> */
+	private function getTranslations(): array {
+		if ($this->translations !== null) {
+			return $this->translations;
+		}
+		$language = strtolower(str_replace('_', '-', trim($this->language->getLanguage())));
+		$language = explode('-', $language)[0] ?? 'en';
+		if (!in_array($language, ['de', 'en', 'fr', 'es', 'ru'], true)) {
+			$language = 'en';
+		}
+		$fallback = $this->readTranslationFile(DIR_PLUGIN . 'NeuronAi/lang/AgentConfigForm/en.ini');
+		$current = $language === 'en' ? [] : $this->readTranslationFile(DIR_PLUGIN . 'NeuronAi/lang/AgentConfigForm/' . $language . '.ini');
+		$this->translations = array_merge($fallback, $current);
+		return $this->translations;
+	}
+
+	private function translate(string $key, string $fallback): string {
+		$value = $this->getTranslations()[$key] ?? null;
+		return is_scalar($value) && trim((string)$value) !== '' ? trim((string)$value) : $fallback;
+	}
+
+	/** @return array<string,string> */
+	private function readTranslationFile(string $filename): array {
+		if (!is_file($filename) || !is_readable($filename)) {
+			return [];
+		}
+		$data = parse_ini_file($filename, true);
+		$section = is_array($data['neuron_agent_config'] ?? null) ? $data['neuron_agent_config'] : [];
+		return array_filter($section, static fn($value): bool => is_scalar($value));
 	}
 
 	/** @param array<string,mixed> $configuration */
@@ -263,11 +300,11 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 			$value = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
 		}
 		catch (JsonException $e) {
-			$errors[] = $label . ' must be valid JSON: ' . $e->getMessage();
+			$errors[] = sprintf($this->translate('json_invalid', '%s must be valid JSON: %s'), $label, $e->getMessage());
 			return [];
 		}
 		if (!is_array($value)) {
-			$errors[] = $label . ' must decode to a JSON object.';
+			$errors[] = sprintf($this->translate('json_object', '%s must decode to a JSON object.'), $label);
 			return [];
 		}
 		return $value;

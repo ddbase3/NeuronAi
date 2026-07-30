@@ -25,6 +25,7 @@ use Base3\Api\IContainer;
 use Base3\Api\IPlugin;
 use Base3\Api\IRequest;
 use Base3\Database\Api\IDatabase;
+use Base3\Language\Api\ILanguage;
 use Base3\State\Api\IStateStore;
 use NeuronAi\Api\INeuronAgentFactory;
 use NeuronAi\Api\INeuronChatHistoryFactory;
@@ -119,6 +120,7 @@ class NeuronAiPlugin implements IPlugin {
 				NeuronAgentConfigFormService::class,
 				fn($c) => new NeuronAgentConfigFormService(
 					$c->get(IRequest::class),
+					$c->get(ILanguage::class),
 					$c->get(IAiModelConfigurationProvider::class),
 					$c->get(IAgentContextProfileService::class),
 					$c->get(IAgentToolProfileService::class)

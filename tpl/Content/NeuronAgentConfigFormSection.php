@@ -6,9 +6,11 @@ $values = is_array($agentConfigForm['values'] ?? null) ? $agentConfigForm['value
 $llmOptions = is_array($agentConfigForm['llm_options'] ?? null) ? $agentConfigForm['llm_options'] : [];
 $contextProfileOptions = is_array($agentConfigForm['context_profile_options'] ?? null) ? $agentConfigForm['context_profile_options'] : [];
 $toolProfileOptions = is_array($agentConfigForm['tool_profile_options'] ?? null) ? $agentConfigForm['tool_profile_options'] : [];
+$translations = is_array($agentConfigForm['translations'] ?? null) ? $agentConfigForm['translations'] : [];
 $formId = (string)($agentConfigForm['form_id'] ?? 'base3_neuron_agent_config');
 $rootId = $formId . '_section';
 $e = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+$t = static fn(string $key, string $fallback): string => trim((string)($translations[$key] ?? '')) !== '' ? (string)$translations[$key] : $fallback;
 $selected = static fn($current, $value): string => (string)$current === (string)$value ? ' selected="selected"' : '';
 $checkedIn = static fn($current, $value): string => in_array((string)$value, array_map('strval', is_array($current) ? $current : []), true) ? ' checked="checked"' : '';
 ?>
@@ -19,7 +21,7 @@ $checkedIn = static fn($current, $value): string => in_array((string)$value, arr
 .base3-neuron-config-row { display:grid; grid-template-columns:minmax(150px,220px) minmax(0,1fr); gap:8px 18px; margin:0 0 14px; }
 .base3-neuron-config-row:last-child { margin-bottom:0; }
 .base3-neuron-config-label { padding-top:7px; font-weight:600; }
-.base3-neuron-config-root input,.base3-neuron-config-root select,.base3-neuron-config-root textarea { width:100%; max-width:760px; min-height:34px; padding:6px 8px; border:1px solid #bbb; border-radius:3px; background:#fff; font:inherit; }
+.base3-neuron-config-root input[type="text"],.base3-neuron-config-root input[type="number"],.base3-neuron-config-root select,.base3-neuron-config-root textarea { width:100%; max-width:760px; min-height:34px; padding:6px 8px; border:1px solid #bbb; border-radius:3px; background:#fff; font:inherit; }
 .base3-neuron-config-root textarea { min-height:140px; resize:vertical; font-family:monospace; }
 .base3-neuron-config-instructions { min-height:220px !important; }
 .base3-neuron-config-help { max-width:800px; margin:5px 0 0; color:#666; font-size:12px; line-height:1.4; }
@@ -35,17 +37,17 @@ $checkedIn = static fn($current, $value): string => in_array((string)$value, arr
 .base3-neuron-config-profile-option-meta { color:#666; font-size:11px; }
 .base3-neuron-config-profile-option-description { display:block; margin-top:3px; color:#555; font-size:12px; line-height:1.4; }
 .base3-neuron-config-empty { margin:0; color:#666; }
-@media(max-width:700px){.base3-neuron-config-row{display:block}.base3-neuron-config-label,.base3-neuron-config-fieldset > legend{display:block;float:none;width:auto;padding:0;margin:0 0 5px}}
+@media(max-width:700px){.base3-neuron-config-section{padding:12px}.base3-neuron-config-row{display:block}.base3-neuron-config-label,.base3-neuron-config-fieldset > legend{display:block;float:none;width:auto;padding:0;margin:0 0 5px}}
 </style>
 
 <div id="<?php echo $e($rootId); ?>" class="base3-neuron-config-root" data-base3-agent-runtime-config-root="neuronai">
 	<div class="base3-neuron-config-section">
-		<h3>Model</h3>
+		<h3><?php echo $e($t('model_section', 'Model')); ?></h3>
 		<div class="base3-neuron-config-row">
-			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_llm">Configured LLM</label>
+			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_llm"><?php echo $e($t('configured_llm', 'Configured LLM')); ?></label>
 			<div>
 				<select id="<?php echo $e($formId); ?>_llm" name="llm" required>
-					<option value="">Select configured LLM</option>
+					<option value=""><?php echo $e($t('select_llm', 'Select configured LLM')); ?></option>
 <?php foreach ($llmOptions as $option) {
 	$id = (string)($option['id'] ?? '');
 	if ($id === '') continue;
@@ -54,17 +56,17 @@ $checkedIn = static fn($current, $value): string => in_array((string)$value, arr
 	$driver = trim((string)($option['driver'] ?? ''));
 	$enabled = !array_key_exists('enabled', $option) || !empty($option['enabled']);
 ?>
-					<option value="<?php echo $e($id); ?>"<?php echo $selected($values['llm'] ?? '', $id); ?><?php echo $enabled ? '' : ' disabled'; ?>><?php echo $e($label . ($model !== '' ? ' / ' . $model : '') . ($driver !== '' ? ' [' . $driver . ']' : '') . ($enabled ? '' : ' [disabled]')); ?></option>
+					<option value="<?php echo $e($id); ?>"<?php echo $selected($values['llm'] ?? '', $id); ?><?php echo $enabled ? '' : ' disabled'; ?>><?php echo $e($label . ($model !== '' ? ' / ' . $model : '') . ($driver !== '' ? ' [' . $driver . ']' : '') . ($enabled ? '' : ' [' . $t('disabled_marker', 'disabled') . ']')); ?></option>
 <?php } ?>
 				</select>
-				<p class="base3-neuron-config-help">Provider, model, endpoint, parameters and credentials are resolved from the selected LLM and its referenced connection.</p>
+				<p class="base3-neuron-config-help"><?php echo $e($t('llm_help', 'Provider, model, endpoint, parameters and credentials are resolved from the selected LLM and its referenced connection.')); ?></p>
 			</div>
 		</div>
 		<div class="base3-neuron-config-row">
-			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_context_profile">Context profile</label>
+			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_context_profile"><?php echo $e($t('context_profile', 'Context profile')); ?></label>
 			<div>
 				<select id="<?php echo $e($formId); ?>_context_profile" name="context_profile">
-					<option value=""<?php echo $selected($values['context_profile'] ?? '', ''); ?>>No context profile</option>
+					<option value=""<?php echo $selected($values['context_profile'] ?? '', ''); ?>><?php echo $e($t('no_context_profile', 'No context profile')); ?></option>
 <?php foreach ($contextProfileOptions as $option) {
 	$id = (string)($option['id'] ?? '');
 	if ($id === '') continue;
@@ -74,15 +76,15 @@ $checkedIn = static fn($current, $value): string => in_array((string)$value, arr
 					<option value="<?php echo $e($id); ?>"<?php echo $selected($values['context_profile'] ?? '', $id); ?>><?php echo $e($label . ($description !== '' ? ' — ' . $description : '')); ?></option>
 <?php } ?>
 				</select>
-				<p class="base3-neuron-config-help">The selected profile is resolved for every turn. Dynamic page, time and user context is not stored in the conversation history.</p>
+				<p class="base3-neuron-config-help"><?php echo $e($t('context_help', 'The selected profile is resolved for every turn. Dynamic page, time and user context is not stored in the conversation history.')); ?></p>
 			</div>
 		</div>
 		<fieldset class="base3-neuron-config-row base3-neuron-config-fieldset">
-			<legend>Tool profiles</legend>
+			<legend><?php echo $e($t('tool_profiles', 'Tool profiles')); ?></legend>
 			<div>
 				<div class="base3-neuron-config-profile-options">
 <?php if ($toolProfileOptions === []) { ?>
-					<p class="base3-neuron-config-empty">No tool profiles are available for internal agents.</p>
+					<p class="base3-neuron-config-empty"><?php echo $e($t('no_tool_profiles', 'No tool profiles are available for internal agents.')); ?></p>
 <?php } ?>
 <?php foreach ($toolProfileOptions as $profile) {
 	$id = (string)($profile['id'] ?? '');
@@ -97,7 +99,7 @@ $checkedIn = static fn($current, $value): string => in_array((string)$value, arr
 							<span class="base3-neuron-config-profile-option-title">
 								<strong><?php echo $e($label); ?></strong>
 								<code><?php echo $e($id); ?></code>
-								<span class="base3-neuron-config-profile-option-meta"><?php echo $e((string)$toolCount); ?> tool <?php echo $toolCount === 1 ? 'preset' : 'presets'; ?></span>
+								<span class="base3-neuron-config-profile-option-meta"><?php echo $e((string)$toolCount); ?> <?php echo $e($toolCount === 1 ? $t('tool_preset_singular', 'tool preset') : $t('tool_preset_plural', 'tool presets')); ?></span>
 							</span>
 <?php if ($description !== '') { ?>
 							<span class="base3-neuron-config-profile-option-description"><?php echo $e($description); ?></span>
@@ -106,24 +108,24 @@ $checkedIn = static fn($current, $value): string => in_array((string)$value, arr
 					</label>
 <?php } ?>
 				</div>
-				<p class="base3-neuron-config-help">Select any number of profiles. Selected profiles are shared with MissionBay. Explicitly read-only functions run directly. Mutations are available only when they require approval and satisfy the configured commit-guard rules.</p>
+				<p class="base3-neuron-config-help"><?php echo $e($t('tool_profiles_help', 'Select any number of profiles. Selected profiles are shared with MissionBay. Explicitly read-only functions run directly. Mutations are available only when they require approval and satisfy the configured commit-guard rules.')); ?></p>
 			</div>
 		</fieldset>
 	</div>
 
 	<div class="base3-neuron-config-section">
-		<h3>Instructions and execution</h3>
+		<h3><?php echo $e($t('execution_section', 'Instructions and execution')); ?></h3>
 		<div class="base3-neuron-config-row">
-			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_instructions">Instructions</label>
-			<div><textarea id="<?php echo $e($formId); ?>_instructions" name="neuron_instructions" class="base3-neuron-config-instructions"><?php echo $e($values['neuron_instructions'] ?? ''); ?></textarea><p class="base3-neuron-config-help">When empty, the request system prompt is used.</p></div>
+			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_instructions"><?php echo $e($t('instructions', 'Instructions')); ?></label>
+			<div><textarea id="<?php echo $e($formId); ?>_instructions" name="neuron_instructions" class="base3-neuron-config-instructions"><?php echo $e($values['neuron_instructions'] ?? ''); ?></textarea><p class="base3-neuron-config-help"><?php echo $e($t('instructions_help', 'When empty, the request system prompt is used.')); ?></p></div>
 		</div>
 		<div class="base3-neuron-config-row">
-			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_max_tools">Maximum tool runs</label>
+			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_max_tools"><?php echo $e($t('maximum_tool_runs', 'Maximum tool runs')); ?></label>
 			<div><input id="<?php echo $e($formId); ?>_max_tools" type="number" min="1" name="neuron_max_tool_runs" value="<?php echo $e($values['neuron_max_tool_runs'] ?? 10); ?>" /></div>
 		</div>
 		<div class="base3-neuron-config-row">
-			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_mcp">MCP connector</label>
-			<div><textarea id="<?php echo $e($formId); ?>_mcp" name="neuron_mcp"><?php echo $e($values['neuron_mcp_json'] ?? '{}'); ?></textarea><p class="base3-neuron-config-help">Optional JSON object with URL or command plus only and exclude lists. Secrets must not be stored in the agent configuration.</p></div>
+			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_mcp"><?php echo $e($t('mcp_connector', 'MCP connector')); ?></label>
+			<div><textarea id="<?php echo $e($formId); ?>_mcp" name="neuron_mcp"><?php echo $e($values['neuron_mcp_json'] ?? '{}'); ?></textarea><p class="base3-neuron-config-help"><?php echo $e($t('mcp_help', 'Optional JSON object with URL or command plus only and exclude lists. Secrets must not be stored in the agent configuration.')); ?></p></div>
 		</div>
 	</div>
 </div>
