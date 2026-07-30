@@ -10,7 +10,7 @@ $formId = (string)($agentConfigForm['form_id'] ?? 'base3_neuron_agent_config');
 $rootId = $formId . '_section';
 $e = static fn($value): string => htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $selected = static fn($current, $value): string => (string)$current === (string)$value ? ' selected="selected"' : '';
-$selectedIn = static fn($current, $value): string => in_array((string)$value, array_map('strval', is_array($current) ? $current : []), true) ? ' selected="selected"' : '';
+$checkedIn = static fn($current, $value): string => in_array((string)$value, array_map('strval', is_array($current) ? $current : []), true) ? ' checked="checked"' : '';
 ?>
 <style>
 .base3-neuron-config-root * { box-sizing:border-box; }
@@ -23,7 +23,19 @@ $selectedIn = static fn($current, $value): string => in_array((string)$value, ar
 .base3-neuron-config-root textarea { min-height:140px; resize:vertical; font-family:monospace; }
 .base3-neuron-config-instructions { min-height:220px !important; }
 .base3-neuron-config-help { max-width:800px; margin:5px 0 0; color:#666; font-size:12px; line-height:1.4; }
-@media(max-width:700px){.base3-neuron-config-row{display:block}.base3-neuron-config-label{display:block;padding:0;margin:0 0 5px}}
+.base3-neuron-config-fieldset { min-width:0; margin:0 0 14px; padding:0; border:0; }
+.base3-neuron-config-fieldset > legend { float:left; width:100%; margin:0; padding:7px 0 0; font-size:inherit; font-weight:600; line-height:inherit; }
+.base3-neuron-config-profile-options { display:grid; gap:8px; max-width:900px; }
+.base3-neuron-config-profile-option { display:flex; align-items:flex-start; gap:9px; margin:0; padding:10px 12px; border:1px solid #ddd; border-radius:5px; background:#fafafa; cursor:pointer; font-weight:normal; }
+.base3-neuron-config-profile-option:hover { border-color:#bbb; background:#fff; }
+.base3-neuron-config-root .base3-neuron-config-profile-option input[type="checkbox"] { width:auto; min-height:0; flex:0 0 auto; margin:3px 0 0; padding:0; }
+.base3-neuron-config-profile-option-body { display:block; min-width:0; }
+.base3-neuron-config-profile-option-title { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px 8px; }
+.base3-neuron-config-profile-option-title code { color:#666; font-size:11px; }
+.base3-neuron-config-profile-option-meta { color:#666; font-size:11px; }
+.base3-neuron-config-profile-option-description { display:block; margin-top:3px; color:#555; font-size:12px; line-height:1.4; }
+.base3-neuron-config-empty { margin:0; color:#666; }
+@media(max-width:700px){.base3-neuron-config-row{display:block}.base3-neuron-config-label,.base3-neuron-config-fieldset > legend{display:block;float:none;width:auto;padding:0;margin:0 0 5px}}
 </style>
 
 <div id="<?php echo $e($rootId); ?>" class="base3-neuron-config-root" data-base3-agent-runtime-config-root="neuronai">
@@ -65,23 +77,38 @@ $selectedIn = static fn($current, $value): string => in_array((string)$value, ar
 				<p class="base3-neuron-config-help">The selected profile is resolved for every turn. Dynamic page, time and user context is not stored in the conversation history.</p>
 			</div>
 		</div>
-		<div class="base3-neuron-config-row">
-			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_tool_profiles">Tool profiles</label>
+		<fieldset class="base3-neuron-config-row base3-neuron-config-fieldset">
+			<legend>Tool profiles</legend>
 			<div>
-				<select id="<?php echo $e($formId); ?>_tool_profiles" name="tool_profiles[]" multiple size="6">
+				<div class="base3-neuron-config-profile-options">
+<?php if ($toolProfileOptions === []) { ?>
+					<p class="base3-neuron-config-empty">No tool profiles are available for internal agents.</p>
+<?php } ?>
 <?php foreach ($toolProfileOptions as $profile) {
 	$id = (string)($profile['id'] ?? '');
 	if ($id === '') continue;
-	$label = (string)($profile['label'] ?? $id);
+	$label = trim((string)($profile['label'] ?? '')) ?: $id;
 	$description = trim((string)($profile['description'] ?? ''));
 	$toolCount = (int)($profile['tool_count'] ?? 0);
 ?>
-					<option value="<?php echo $e($id); ?>"<?php echo $selectedIn($values['tool_profiles'] ?? [], $id); ?>><?php echo $e($label . ' (' . $toolCount . ')' . ($description !== '' ? ' — ' . $description : '')); ?></option>
+					<label class="base3-neuron-config-profile-option">
+						<input type="checkbox" name="tool_profiles[]" value="<?php echo $e($id); ?>"<?php echo $checkedIn($values['tool_profiles'] ?? [], $id); ?> />
+						<span class="base3-neuron-config-profile-option-body">
+							<span class="base3-neuron-config-profile-option-title">
+								<strong><?php echo $e($label); ?></strong>
+								<code><?php echo $e($id); ?></code>
+								<span class="base3-neuron-config-profile-option-meta"><?php echo $e((string)$toolCount); ?> tool <?php echo $toolCount === 1 ? 'preset' : 'presets'; ?></span>
+							</span>
+<?php if ($description !== '') { ?>
+							<span class="base3-neuron-config-profile-option-description"><?php echo $e($description); ?></span>
 <?php } ?>
-				</select>
-				<p class="base3-neuron-config-help">Selected profiles are shared with MissionBay. Explicitly read-only functions run directly. Mutations are available only when they require approval and satisfy the configured commit-guard rules.</p>
+						</span>
+					</label>
+<?php } ?>
+				</div>
+				<p class="base3-neuron-config-help">Select any number of profiles. Selected profiles are shared with MissionBay. Explicitly read-only functions run directly. Mutations are available only when they require approval and satisfy the configured commit-guard rules.</p>
 			</div>
-		</div>
+		</fieldset>
 	</div>
 
 	<div class="base3-neuron-config-section">
@@ -105,7 +132,7 @@ $selectedIn = static fn($current, $value): string => in_array((string)$value, ar
 (function(){
 	var root=document.getElementById(<?php echo json_encode($rootId); ?>);if(!root||root.dataset.ready==='1')return;root.dataset.ready='1';
 	function setValue(name,value){var field=root.querySelector('[name="'+name.replace(/"/g,'\\"')+'"]');if(field)field.value=value==null?'':String(value)}
-	function setMulti(name,values){values=Array.isArray(values)?values.map(String):[];root.querySelectorAll('[name="'+name.replace(/"/g,'\\"')+'"] option').forEach(function(option){option.selected=values.indexOf(String(option.value))!==-1})}
+	function setMulti(name,values){values=Array.isArray(values)?values.map(String):[];var escaped=name.replace(/"/g,'\\"');root.querySelectorAll('select[multiple][name="'+escaped+'"] option').forEach(function(option){option.selected=values.indexOf(String(option.value))!==-1});root.querySelectorAll('input[type="checkbox"][name="'+escaped+'"]').forEach(function(field){field.checked=values.indexOf(String(field.value))!==-1})}
 	root.__base3AgentRuntimeConfigUpdateValues=function(values){values=values&&typeof values==='object'?values:{};setValue('llm',values.llm||'');setValue('context_profile',values.context_profile||'');setMulti('tool_profiles[]',values.tool_profiles||[]);setValue('neuron_instructions',values.neuron_instructions||'');setValue('neuron_max_tool_runs',values.neuron_max_tool_runs==null?10:values.neuron_max_tool_runs);setValue('neuron_mcp',values.neuron_mcp_json||'{}')};
 	root.__base3AgentRuntimeConfigPrepareSubmit=function(){return true};
 })();
