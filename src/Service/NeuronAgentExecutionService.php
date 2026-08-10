@@ -35,6 +35,7 @@ use AssistantFoundation\Dto\AgentResume;
 use AssistantFoundation\Dto\AgentState;
 use AssistantFoundation\Dto\AgentSuspension;
 use AssistantFoundation\Dto\AgentSuspensionClaim;
+use AssistantFoundation\Dto\AgentSuspensionScope;
 use AssistantFoundation\Dto\AgentSuspensionState;
 use AssistantFoundation\Dto\AgentToolResult;
 use AssistantFoundation\Dto\AiToolCall;
@@ -95,6 +96,8 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 		?IAgentEventSink $eventSink = null
 	): AgentExecutionResult {
 		$inputs = $request->getInputs();
+		$mode = $this->readExecutionMode($inputs);
+		$isSuggestions = $mode === 'suggestions';
 		$resume = $this->readResume($inputs);
 		$prompt = $this->readString($inputs, 'prompt');
 		if ($prompt === '' && $resume === null) {
@@ -144,7 +147,11 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 				'tools' => $toolSet->getCatalog()->names()
 			];
 			$historyLease = $this->chatHistoryFactory->create($configuration, $executionRequest);
-			$agent = $this->agentFactory->create($configuration, $executionRequest, $toolSet);
+			$agent = $this->agentFactory->create(
+				$configuration,
+				$executionRequest,
+				$isSuggestions ? null : $toolSet
+			);
 			if ($historyLease !== null) {
 				$agent->setChatHistory($historyLease->getHistory());
 			}
@@ -179,14 +186,21 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 					$contextWarnings,
 					$contextDiagnostics,
 					$toolWarnings,
-					$toolDiagnostics
+					$toolDiagnostics,
+					[],
+					!$isSuggestions
 				);
 			}
 			catch (NeuronToolSuspensionException $e) {
 				$historyLease?->discard();
 				return $this->suspend(
 					$messageId,
-					$this->withContinuation($e->getSuspension(), $prompt, []),
+					$this->withContinuation(
+						$e->getSuspension(),
+						$prompt,
+						[],
+						$this->getConversationSuspensionScopeId($executionRequest, $e->getSuspension())
+					),
 					$eventSink,
 					array_merge($contextWarnings, $toolWarnings),
 					$contextDiagnostics,
@@ -206,9 +220,6 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 			]);
 			$this->emit($eventSink, 'done', ['status' => AgentExecutionStatus::FAILED]);
 			return $this->createFailureResult($messageId, $e, array_merge($contextWarnings, $toolWarnings));
-		}
-		finally {
-			$historyLease?->release();
 		}
 	}
 
@@ -324,7 +335,12 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 			$historyLease?->discard();
 			return $this->suspend(
 				$messageId,
-				$this->withContinuation($e->getSuspension(), $prompt, $completedTools),
+				$this->withContinuation(
+					$e->getSuspension(),
+					$prompt,
+					$completedTools,
+					trim($suspension->getScopeId()) !== '' ? $suspension->getScopeId() : $suspension->getId()
+				),
 				$eventSink,
 				array_merge($contextWarnings, $toolWarnings),
 				$contextDiagnostics,
@@ -350,7 +366,8 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 		array $contextDiagnostics,
 		array $toolWarnings,
 		array $toolDiagnostics,
-		array $initialToolCalls = []
+		array $initialToolCalls = [],
+		bool $persistHistory = true
 	): AgentExecutionResult {
 		$toolCalls = $initialToolCalls;
 		$cancelled = false;
@@ -385,7 +402,12 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 			throw new \RuntimeException('Neuron AI completed without assistant content.');
 		}
 
-		$historyLease?->commit();
+		if ($persistHistory) {
+			$historyLease?->commit();
+		}
+		else {
+			$historyLease?->discard();
+		}
 		$this->emit($eventSink, 'done', ['status' => AgentExecutionStatus::COMPLETED]);
 		return $this->createResult(
 			$messageId,
@@ -402,7 +424,8 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 	private function withContinuation(
 		AgentSuspension $suspension,
 		string $prompt,
-		array $completedTools
+		array $completedTools,
+		string $scopeId
 	): AgentSuspension {
 		return new AgentSuspension(
 			$suspension->getId(),
@@ -415,8 +438,28 @@ final class NeuronAgentExecutionService implements IAgentRuntimeService {
 				]
 			]),
 			$suspension->getCreatedAt(),
-			array_replace($suspension->getMetadata(), ['runtime_id' => self::getRuntimeId()])
+			array_replace($suspension->getMetadata(), ['runtime_id' => self::getRuntimeId()]),
+			$scopeId
 		);
+	}
+
+	private function getConversationSuspensionScopeId(
+		AgentExecutionRequest $request,
+		AgentSuspension $suspension
+	): string {
+		$context = $request->getContext();
+		$scopeId = AgentSuspensionScope::forConversation(
+			$this->readString($context, 'conversation_channel_id'),
+			$this->readString($context, 'conversation_id')
+		);
+
+		return $scopeId !== '' ? $scopeId : $suspension->getId();
+	}
+
+	/** @param array<string,mixed> $inputs */
+	private function readExecutionMode(array $inputs): string {
+		$mode = strtolower(trim((string)($inputs['mode'] ?? 'chat')));
+		return $mode !== '' ? $mode : 'chat';
 	}
 
 	/** @return array<string,mixed> */

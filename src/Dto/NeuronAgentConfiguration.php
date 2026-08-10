@@ -22,6 +22,8 @@ namespace NeuronAi\Dto;
  */
 final class NeuronAgentConfiguration {
 
+	public const DEFAULT_MEMORY_PROFILE = 'neuronai-database';
+
 	private const DEFAULT_MAX_TOOL_RUNS = 10;
 
 	/**
@@ -34,7 +36,8 @@ final class NeuronAgentConfiguration {
 		private readonly string $contextProfile = '',
 		private readonly array $toolProfiles = [],
 		private readonly int $maxToolRuns = self::DEFAULT_MAX_TOOL_RUNS,
-		private readonly ?array $mcp = null
+		private readonly ?array $mcp = null,
+		private readonly string $memoryProfile = ''
 	) {}
 
 	/**
@@ -47,6 +50,13 @@ final class NeuronAgentConfiguration {
 			$agentConfiguration,
 			'neuron_instructions',
 			self::readString($inputs, 'system')
+		);
+		$memoryProfile = self::normalizeKey(
+			self::readString(
+				$agentConfiguration,
+				'memory_profile',
+				array_key_exists('memory_profile', $agentConfiguration) ? '' : self::DEFAULT_MEMORY_PROFILE
+			)
 		);
 		$contextProfile = self::normalizeKey(self::readString($agentConfiguration, 'context_profile'));
 		$suggestions = self::readString($inputs, 'mode') === 'suggestions';
@@ -66,11 +76,12 @@ final class NeuronAgentConfiguration {
 			throw new \InvalidArgumentException('Neuron AI requires a configured LLM.');
 		}
 
-		return new self($llmId, $instructions, $contextProfile, $toolProfiles, $maxToolRuns, $mcp);
+		return new self($llmId, $instructions, $contextProfile, $toolProfiles, $maxToolRuns, $mcp, $memoryProfile);
 	}
 
 	public function getLlmId(): string { return $this->llmId; }
 	public function getInstructions(): string { return $this->instructions; }
+	public function getMemoryProfile(): string { return $this->memoryProfile; }
 	public function getContextProfile(): string { return $this->contextProfile; }
 	/** @return array<int,string> */ public function getToolProfiles(): array { return $this->toolProfiles; }
 	public function getMaxToolRuns(): int { return $this->maxToolRuns; }
@@ -82,7 +93,8 @@ final class NeuronAgentConfiguration {
 			$this->contextProfile,
 			$this->toolProfiles,
 			$this->maxToolRuns,
-			$this->mcp
+			$this->mcp,
+			$this->memoryProfile
 		);
 	}
 

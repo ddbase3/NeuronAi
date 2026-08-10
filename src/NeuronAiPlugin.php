@@ -24,13 +24,15 @@ use AssistantFoundation\Api\IAiModelConfigurationProvider;
 use Base3\Api\IContainer;
 use Base3\Api\IPlugin;
 use Base3\Api\IRequest;
+use Base3\Accesscontrol\Api\IAccesscontrol;
 use Base3\Database\Api\IDatabase;
 use Base3\Language\Api\ILanguage;
-use Base3\State\Api\IStateStore;
+use Base3\Session\Api\ISession;
 use NeuronAi\Api\INeuronAgentFactory;
 use NeuronAi\Api\INeuronChatHistoryFactory;
 use NeuronAi\Api\INeuronProviderFactory;
 use NeuronAi\Service\NeuronAgentConfigFormService;
+use NeuronAi\Service\NeuronConversationOwnerResolver;
 use NeuronAi\Service\NeuronAgentExecutionService;
 use NeuronAi\Service\NeuronAgentFactory;
 use NeuronAi\Service\NeuronAgentToolFactory;
@@ -78,6 +80,14 @@ class NeuronAiPlugin implements IPlugin {
 				IContainer::SHARED | IContainer::NOOVERWRITE
 			)
 			->set(
+				NeuronConversationOwnerResolver::class,
+				fn($c) => new NeuronConversationOwnerResolver(
+					$c->get(IAccesscontrol::class),
+					$c->get(ISession::class)
+				),
+				IContainer::SHARED | IContainer::NOOVERWRITE
+			)
+			->set(
 				NeuronChatHistoryRepository::class,
 				fn($c) => new NeuronChatHistoryRepository($c->get(IDatabase::class)),
 				IContainer::SHARED | IContainer::NOOVERWRITE
@@ -86,8 +96,8 @@ class NeuronAiPlugin implements IPlugin {
 				INeuronChatHistoryFactory::class,
 				fn($c) => new NeuronChatHistoryFactory(
 					$c->get(NeuronConversationKeyFactory::class),
+					$c->get(NeuronConversationOwnerResolver::class),
 					$c->get(NeuronChatHistoryRepository::class),
-					$c->get(IStateStore::class),
 					$c->get(IAiModelConfigurationProvider::class)
 				),
 				IContainer::SHARED | IContainer::NOOVERWRITE

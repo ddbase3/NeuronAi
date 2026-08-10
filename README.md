@@ -47,6 +47,7 @@ or credential configuration.
 
 Additional Neuron settings are:
 
+- `memory_profile`;
 - `context_profile`;
 - `neuron_instructions`;
 - `neuron_max_tool_runs`;
@@ -71,6 +72,8 @@ The provider factory depends only on
 that provider without changing NeuronAi. See `docs/DI.md`.
 
 ## Persistent conversation memory
+
+The runtime configuration exposes `memory_profile`. The built-in `neuronai-database` profile is backed by the same `base3_neuronai_chathistory` records used by Neuron execution and by the runtime-neutral conversation API. Existing configurations without an explicit profile normalize to this native profile.
 
 Chatbot turns provide a stable conversation ID and a server-owned user/session
 scope. NeuronAi attaches a database-backed implementation of Neuron's public

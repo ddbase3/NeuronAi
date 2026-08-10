@@ -184,6 +184,7 @@ PHP);
 	$toolFactory = new \NeuronAi\Service\NeuronAgentToolFactory();
 	$suspensionRepository = new class implements \AssistantFoundation\Api\IAgentSuspensionRepository {
 		public function create(\AssistantFoundation\Dto\AgentSuspension $suspension, int $ttlSeconds): string { throw new \LogicException('Not used by the read-only smoke test.'); }
+		public function findPending(string $scopeId): ?\AssistantFoundation\Dto\AgentSuspensionState { return null; }
 		public function claim(string $resumeHandle): \AssistantFoundation\Dto\AgentSuspensionClaim { throw new \LogicException('Not used by the read-only smoke test.'); }
 		public function release(\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void {}
 		public function consume(\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void {}
@@ -268,6 +269,48 @@ PHP);
 	);
 	if (($failureEvents[0]->getName() ?? '') !== 'tool.failed') {
 		throw new \RuntimeException('Failed BASE3 tool execution was not mapped to tool.failed.');
+	}
+
+
+	$provider->lastSystemPrompt = null;
+	$provider->lastTools = [$nativeTool];
+	$textTaskService = new \NeuronAi\Service\NeuronAgentTextTaskService(
+		new \NeuronAi\Service\NeuronAgentFactory($providerFactory, $toolFactory),
+		$contextProfileService,
+		$toolProfileService,
+		new \NeuronAi\Service\NeuronContextInstructionsBuilder()
+	);
+	$textTaskResult = $textTaskService->executeTextTask(new \AssistantFoundation\Dto\AgentTextTaskRequest(
+		[
+			'llm' => 'fake-llm',
+			'context_profile' => 'smoke-context',
+			'tool_profiles' => ['smoke-tools'],
+			'neuron_mcp' => ['url' => 'https://must-not-be-used.invalid']
+		],
+		'chat-opening-message',
+		'Create one concise greeting.',
+		'Greet the user.',
+		[
+			'conversation_id' => 'must-not-be-used',
+			'conversation_owner_key' => str_repeat('c', 64)
+		],
+		true,
+		true
+	));
+	if ($textTaskResult->getContent() !== 'Hello world') {
+		throw new \RuntimeException('Neuron isolated text task returned unexpected content.');
+	}
+	if (!is_string($provider->lastSystemPrompt) || !str_contains($provider->lastSystemPrompt, 'Current page is Smoke Test.')) {
+		throw new \RuntimeException('Neuron isolated text task did not include the configured context profile.');
+	}
+	if (!str_contains($provider->lastSystemPrompt, 'smoke_echo')) {
+		throw new \RuntimeException('Neuron isolated text task did not include the configured capability catalog.');
+	}
+	if ($provider->lastTools !== []) {
+		throw new \RuntimeException('Neuron isolated text task exposed executable tools.');
+	}
+	if (($textTaskResult->getMetadata()['runtime'] ?? '') !== 'neuronai') {
+		throw new \RuntimeException('Neuron isolated text task did not report its runtime.');
 	}
 
 	$modelProvider = new class implements \AssistantFoundation\Api\IAiModelConfigurationProvider {

@@ -8,16 +8,15 @@ use PHPUnit\Framework\TestCase;
 
 final class NeuronConversationKeyFactoryTest extends TestCase {
 
-	public function testBuildsStableScopeFromServerOwnedContext(): void {
+	public function testBuildsStableScopeFromServerOwnedIdentity(): void {
 		$ownerKey = str_repeat('a', 64);
 		$request = new AgentExecutionRequest([], [], [
 			'conversation_id' => 'conversation-1',
-			'conversation_owner_key' => $ownerKey,
 			'chatbot_config_group' => 'chatbot',
 			'chatbot_config_name' => 'example'
 		]);
 
-		$scope = (new NeuronConversationKeyFactory())->create($request);
+		$scope = (new NeuronConversationKeyFactory())->create($request, $ownerKey);
 
 		self::assertNotNull($scope);
 		self::assertSame('conversation-1', $scope->getConversationId());
@@ -30,6 +29,32 @@ final class NeuronConversationKeyFactoryTest extends TestCase {
 			'conversation_id' => 'conversation-1'
 		]);
 
-		self::assertNull((new NeuronConversationKeyFactory())->create($request));
+		self::assertNull((new NeuronConversationKeyFactory())->create($request, str_repeat('a', 64)));
+	}
+
+	public function testReturnsNullForInvalidOwnerIdentity(): void {
+		$request = new AgentExecutionRequest([], [], [
+			'conversation_id' => 'conversation-1',
+			'chatbot_config_group' => 'chatbot',
+			'chatbot_config_name' => 'example'
+		]);
+
+		self::assertNull((new NeuronConversationKeyFactory())->create($request, 'client-owner'));
+	}
+
+	public function testCreatesSameScopeFromExplicitCanonicalValues(): void {
+		$factory = new NeuronConversationKeyFactory();
+		$scope = $factory->createFromValues(
+			'conversation-1',
+			str_repeat('b', 64),
+			'chatbot',
+			'example'
+		);
+
+		self::assertNotNull($scope);
+		self::assertSame('conversation-1', $scope->getConversationId());
+		self::assertSame(str_repeat('b', 64), $scope->getOwnerKey());
+		self::assertSame('chatbot', $scope->getConfigGroup());
+		self::assertSame('example', $scope->getConfigName());
 	}
 }

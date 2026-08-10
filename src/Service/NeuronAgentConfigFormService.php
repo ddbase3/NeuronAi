@@ -49,6 +49,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 	public function getDefaultSettings(): array {
 		return [
 			'llm' => '',
+			'memory_profile' => NeuronConversationMemoryProfile::DATABASE,
 			'context_profile' => '',
 			'tool_profiles' => [],
 			'neuron_instructions' => '',
@@ -62,6 +63,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 
 		return [
 			'llm' => $this->normalizeTechnicalKey((string)($settings['llm'] ?? $defaults['llm'])),
+			'memory_profile' => $this->normalizeTechnicalKey((string)($settings['memory_profile'] ?? $defaults['memory_profile'])),
 			'context_profile' => $this->normalizeTechnicalKey((string)($settings['context_profile'] ?? $defaults['context_profile'])),
 			'tool_profiles' => $this->normalizeTechnicalKeyList($settings['tool_profiles'] ?? $defaults['tool_profiles']),
 			'neuron_instructions' => $this->normalizeTextBlock($this->readString($settings, 'neuron_instructions')),
@@ -93,6 +95,14 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 			$errors[] = $this->translate('mcp_secret_error', 'Neuron MCP configuration must not contain credentials or secrets.');
 		}
 
+		$memoryProfile = $this->normalizeTechnicalKey((string)$this->request->request('memory_profile', ''));
+		if ($memoryProfile !== '' && !NeuronConversationMemoryProfile::isSupported($memoryProfile)) {
+			$errors[] = sprintf(
+				$this->translate('memory_profile_missing_error', 'Selected conversation memory profile is not available: %s'),
+				$memoryProfile
+			);
+		}
+
 		$contextProfile = $this->normalizeTechnicalKey((string)$this->request->request('context_profile', ''));
 		if ($contextProfile !== '' && !$this->contextProfileService->hasProfile($contextProfile)) {
 			$errors[] = sprintf($this->translate('context_missing_error', 'Selected context profile is not available: %s'), $contextProfile);
@@ -107,6 +117,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 
 		return $this->normalizeSettings([
 			'llm' => $llm,
+			'memory_profile' => $memoryProfile,
 			'context_profile' => $contextProfile,
 			'tool_profiles' => $toolProfiles,
 			'neuron_instructions' => (string)$this->request->request('neuron_instructions', ''),
@@ -118,6 +129,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 	public function getPostedViewValues(): array {
 		return $this->settingsToViewValues([
 			'llm' => $this->request->request('llm', ''),
+			'memory_profile' => $this->request->request('memory_profile', NeuronConversationMemoryProfile::DATABASE),
 			'context_profile' => $this->request->request('context_profile', ''),
 			'tool_profiles' => $this->request->request('tool_profiles', []),
 			'neuron_instructions' => $this->request->request('neuron_instructions', ''),
@@ -166,6 +178,14 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 			'form_id' => $formId,
 			'values' => $values,
 			'llm_options' => $this->modelConfigurationProvider->getOptions(),
+			'memory_profile_options' => [[
+				'id' => NeuronConversationMemoryProfile::DATABASE,
+				'label' => $this->translate('native_memory_profile_label', 'Neuron AI database history'),
+				'description' => $this->translate(
+					'native_memory_profile_description',
+					'Persistent Neuron-native conversation history stored through the BASE3 database abstraction.'
+				)
+			]],
 			'context_profile_options' => $this->contextProfileService->getOptions(),
 			'tool_profile_options' => $this->toolProfileService->getOptions(),
 			'translations' => $this->getTranslations()

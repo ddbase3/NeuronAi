@@ -17,24 +17,20 @@
 
 namespace NeuronAi\Dto;
 
-use Base3\State\Api\IStateStore;
 use NeuronAi\Chat\History\DatabaseNeuronChatHistory;
-use Throwable;
 
 /**
- * Holds a buffered chat history and its exclusive conversation lock for one
- * agent run.
+ * Holds a buffered chat history for one agent run.
+ *
+ * Concurrency is owned by the history repository through optimistic version
+ * checks on the canonical conversation row. No second runtime lock is kept.
  */
 final class NeuronChatHistoryLease {
 
-	private bool $released = false;
 	private bool $completed = false;
 
 	public function __construct(
-		private readonly DatabaseNeuronChatHistory $history,
-		private readonly IStateStore $stateStore,
-		private readonly string $lockKey,
-		private readonly string $lockToken
+		private readonly DatabaseNeuronChatHistory $history
 	) {}
 
 	public function getHistory(): DatabaseNeuronChatHistory {
@@ -59,27 +55,9 @@ final class NeuronChatHistoryLease {
 		$this->completed = true;
 	}
 
-	public function release(): void {
-		if ($this->released) {
-			return;
-		}
-		$this->released = true;
-
-		try {
-			$currentToken = $this->stateStore->get($this->lockKey);
-			if (is_string($currentToken) && hash_equals($this->lockToken, $currentToken)) {
-				$this->stateStore->delete($this->lockKey);
-				$this->stateStore->flush();
-			}
-		}
-		catch (Throwable) {
-		}
-	}
-
 	public function __destruct() {
 		if (!$this->completed) {
 			$this->discard();
 		}
-		$this->release();
 	}
 }

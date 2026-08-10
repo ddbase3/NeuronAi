@@ -201,6 +201,20 @@ PHP);
 			$this->records[$handle] = $suspension;
 			return $handle;
 		}
+		public function findPending(string $scopeId): ?\AssistantFoundation\Dto\AgentSuspensionState {
+			foreach ($this->records as $handle => $suspension) {
+				if ($suspension->getScopeId() !== $scopeId) {
+					continue;
+				}
+				return new \AssistantFoundation\Dto\AgentSuspensionState(
+					true,
+					$suspension->getStatus(),
+					$suspension->getRequests(),
+					$handle
+				);
+			}
+			return null;
+		}
 		public function claim(string $resumeHandle): \AssistantFoundation\Dto\AgentSuspensionClaim {
 			if (!isset($this->records[$resumeHandle])) {
 				throw new \RuntimeException('Missing smoke suspension.');
@@ -228,6 +242,7 @@ PHP);
 	$context = [
 		'config_group' => 'copg-chatbot',
 		'config_name' => 'mutation-smoke',
+		'conversation_channel_id' => 'smoke-chatbot',
 		'conversation_id' => 'mutation-conversation',
 		'conversation_owner_key' => str_repeat('b', 64)
 	];
@@ -249,8 +264,19 @@ PHP);
 	$suspensionState = $first->getAgentResult()->getState()->getSuspension();
 	$handle = $suspensionState?->getResumeHandle() ?? '';
 	$requestId = $suspensionState?->getInteractionRequests()[0]->getId() ?? '';
-	if ($handle === '' || $requestId === '' || $toolSet->executions !== 0) {
-		throw new \RuntimeException('Mutation executed before approval or suspension metadata is incomplete.');
+	$scopeId = \AssistantFoundation\Dto\AgentSuspensionScope::forConversation(
+		$context['conversation_channel_id'],
+		$context['conversation_id']
+	);
+	$pending = $repository->findPending($scopeId);
+	if (
+		$handle === ''
+		|| $requestId === ''
+		|| $toolSet->executions !== 0
+		|| $pending?->getResumeHandle() !== $handle
+		|| $pending?->getInteractionRequests()[0]->getId() !== $requestId
+	) {
+		throw new \RuntimeException('Mutation executed before approval or pending suspension state is incomplete.');
 	}
 
 	$secondSink = new \AssistantRuntime\Service\CollectingAgentEventSink();
@@ -269,8 +295,13 @@ PHP);
 		$context
 	), $secondSink);
 	$content = $second->getOutput()['assistant']['message']['content'] ?? '';
-	if ($content !== 'Mutation confirmed' || $toolSet->executions !== 1 || !$provider->receivedToolResult) {
-		throw new \RuntimeException('Approved mutation did not resume exactly once through Neuron.');
+	if (
+		$content !== 'Mutation confirmed'
+		|| $toolSet->executions !== 1
+		|| !$provider->receivedToolResult
+		|| $repository->findPending($scopeId) !== null
+	) {
+		throw new \RuntimeException('Approved mutation did not resume exactly once or left a pending suspension behind.');
 	}
 	$eventNames = array_map(static fn($event): string => $event->getName(), $secondSink->getEvents());
 	if ($eventNames !== ['msgid', 'tool.started', 'tool.finished', 'token', 'done']) {

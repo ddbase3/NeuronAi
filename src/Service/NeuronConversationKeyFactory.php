@@ -21,7 +21,7 @@ use AssistantFoundation\Dto\AgentExecutionRequest;
 use NeuronAi\Dto\NeuronConversationScope;
 
 /**
- * Builds a persistent conversation scope from server-owned request context.
+ * Builds a persistent conversation scope from server-owned runtime identity.
  */
 final class NeuronConversationKeyFactory {
 
@@ -29,12 +29,25 @@ final class NeuronConversationKeyFactory {
 		return 'neuronconversationkeyfactory';
 	}
 
-	public function create(AgentExecutionRequest $request): ?NeuronConversationScope {
+	public function create(AgentExecutionRequest $request, string $ownerKey): ?NeuronConversationScope {
 		$context = $request->getContext();
 		$conversationId = $this->normalizeConversationId($this->readString($context, 'conversation_id'));
-		$ownerKey = $this->normalizeOwnerKey($this->readString($context, 'conversation_owner_key'));
 		$configGroup = $this->normalizeConfigKey($this->readString($context, 'chatbot_config_group'));
 		$configName = $this->normalizeConfigKey($this->readString($context, 'chatbot_config_name'));
+
+		return $this->createFromValues($conversationId, $ownerKey, $configGroup, $configName);
+	}
+
+	public function createFromValues(
+		string $conversationId,
+		string $ownerKey,
+		string $configGroup,
+		string $configName
+	): ?NeuronConversationScope {
+		$conversationId = $this->normalizeConversationId($conversationId);
+		$ownerKey = $this->normalizeOwnerKey($ownerKey);
+		$configGroup = $this->normalizeConfigKey($configGroup);
+		$configName = $this->normalizeConfigKey($configName);
 
 		if ($conversationId === '' || $ownerKey === '' || $configGroup === '' || $configName === '') {
 			return null;

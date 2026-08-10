@@ -19,27 +19,25 @@ namespace NeuronAi\Service;
 
 use AssistantFoundation\Api\IAiModelConfigurationProvider;
 use AssistantFoundation\Dto\AgentExecutionRequest;
-use Base3\State\Api\IStateStore;
 use NeuronAi\Api\INeuronChatHistoryFactory;
 use NeuronAi\Chat\History\DatabaseNeuronChatHistory;
 use NeuronAi\Dto\NeuronAgentConfiguration;
 use NeuronAi\Dto\NeuronChatHistoryLease;
-use Throwable;
 
 /**
- * Creates locked, database-backed Neuron chat histories when a conversation
- * scope is present in the execution request.
+ * Creates database-backed Neuron chat histories when a conversation scope is
+ * present in the execution request.
+ *
+ * The canonical history row owns concurrency through optimistic versioning.
  */
 final class NeuronChatHistoryFactory implements INeuronChatHistoryFactory {
 
 	private const DEFAULT_CONTEXT_WINDOW = 50000;
-	private const LOCK_TTL_SECONDS = 900;
-	private const LOCK_PREFIX = 'locks.neuronai.chathistory.';
 
 	public function __construct(
 		private readonly NeuronConversationKeyFactory $conversationKeyFactory,
+		private readonly NeuronConversationOwnerResolver $ownerResolver,
 		private readonly NeuronChatHistoryRepository $repository,
-		private readonly IStateStore $stateStore,
 		private readonly IAiModelConfigurationProvider $modelConfigurationProvider
 	) {}
 
@@ -51,46 +49,27 @@ final class NeuronChatHistoryFactory implements INeuronChatHistoryFactory {
 		NeuronAgentConfiguration $configuration,
 		AgentExecutionRequest $request
 	): ?NeuronChatHistoryLease {
-		$scope = $this->conversationKeyFactory->create($request);
+		if (!NeuronConversationMemoryProfile::isSupported($configuration->getMemoryProfile())) {
+			return null;
+		}
+
+		$scope = $this->conversationKeyFactory->create(
+			$request,
+			$this->ownerResolver->resolveOwnerKey()
+		);
 		if ($scope === null) {
 			return null;
 		}
 
-		$lockKey = self::LOCK_PREFIX . $scope->getConversationKey();
-		$lockToken = bin2hex(random_bytes(16));
-		if (!$this->stateStore->setIfNotExists($lockKey, $lockToken, self::LOCK_TTL_SECONDS)) {
-			throw new \RuntimeException('Neuron AI conversation is already being processed.');
-		}
-		$this->stateStore->flush();
+		$record = $this->repository->loadOrCreate($scope);
+		$history = new DatabaseNeuronChatHistory(
+			$scope->getConversationKey(),
+			$this->repository,
+			$record,
+			$this->resolveContextWindow($configuration)
+		);
 
-		try {
-			$record = $this->repository->loadOrCreate($scope);
-			$history = new DatabaseNeuronChatHistory(
-				$scope->getConversationKey(),
-				$this->repository,
-				$record,
-				$this->resolveContextWindow($configuration)
-			);
-
-			return new NeuronChatHistoryLease(
-				$history,
-				$this->stateStore,
-				$lockKey,
-				$lockToken
-			);
-		}
-		catch (Throwable $exception) {
-			try {
-				$currentToken = $this->stateStore->get($lockKey);
-				if (is_string($currentToken) && hash_equals($lockToken, $currentToken)) {
-					$this->stateStore->delete($lockKey);
-					$this->stateStore->flush();
-				}
-			}
-			catch (Throwable) {
-			}
-			throw $exception;
-		}
+		return new NeuronChatHistoryLease($history);
 	}
 
 	private function resolveContextWindow(NeuronAgentConfiguration $configuration): int {

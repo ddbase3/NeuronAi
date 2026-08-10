@@ -4,6 +4,7 @@ $agentConfigForm = is_array($runtimeAgentConfigForm ?? null)
 	: [];
 $values = is_array($agentConfigForm['values'] ?? null) ? $agentConfigForm['values'] : [];
 $llmOptions = is_array($agentConfigForm['llm_options'] ?? null) ? $agentConfigForm['llm_options'] : [];
+$memoryProfileOptions = is_array($agentConfigForm['memory_profile_options'] ?? null) ? $agentConfigForm['memory_profile_options'] : [];
 $contextProfileOptions = is_array($agentConfigForm['context_profile_options'] ?? null) ? $agentConfigForm['context_profile_options'] : [];
 $toolProfileOptions = is_array($agentConfigForm['tool_profile_options'] ?? null) ? $agentConfigForm['tool_profile_options'] : [];
 $translations = is_array($agentConfigForm['translations'] ?? null) ? $agentConfigForm['translations'] : [];
@@ -60,6 +61,23 @@ $checkedIn = static fn($current, $value): string => in_array((string)$value, arr
 <?php } ?>
 				</select>
 				<p class="base3-neuron-config-help"><?php echo $e($t('llm_help', 'Provider, model, endpoint, parameters and credentials are resolved from the selected LLM and its referenced connection.')); ?></p>
+			</div>
+		</div>
+		<div class="base3-neuron-config-row">
+			<label class="base3-neuron-config-label" for="<?php echo $e($formId); ?>_memory_profile"><?php echo $e($t('memory_profile', 'Conversation memory profile')); ?></label>
+			<div>
+				<select id="<?php echo $e($formId); ?>_memory_profile" name="memory_profile">
+					<option value=""<?php echo $selected($values['memory_profile'] ?? '', ''); ?>><?php echo $e($t('no_memory_profile', 'No conversation memory')); ?></option>
+<?php foreach ($memoryProfileOptions as $option) {
+	$id = (string)($option['id'] ?? '');
+	if ($id === '') continue;
+	$label = (string)($option['label'] ?? $id);
+	$description = trim((string)($option['description'] ?? ''));
+?>
+					<option value="<?php echo $e($id); ?>"<?php echo $selected($values['memory_profile'] ?? '', $id); ?>><?php echo $e($label . ($description !== '' ? ' — ' . $description : '')); ?></option>
+<?php } ?>
+				</select>
+				<p class="base3-neuron-config-help"><?php echo $e($t('memory_profile_help', 'Selects the canonical Neuron conversation history used for persistence, chat lists, titles and restore.')); ?></p>
 			</div>
 		</div>
 		<div class="base3-neuron-config-row">
@@ -135,7 +153,7 @@ $checkedIn = static fn($current, $value): string => in_array((string)$value, arr
 	var root=document.getElementById(<?php echo json_encode($rootId); ?>);if(!root||root.dataset.ready==='1')return;root.dataset.ready='1';
 	function setValue(name,value){var field=root.querySelector('[name="'+name.replace(/"/g,'\\"')+'"]');if(field)field.value=value==null?'':String(value)}
 	function setMulti(name,values){values=Array.isArray(values)?values.map(String):[];var escaped=name.replace(/"/g,'\\"');root.querySelectorAll('select[multiple][name="'+escaped+'"] option').forEach(function(option){option.selected=values.indexOf(String(option.value))!==-1});root.querySelectorAll('input[type="checkbox"][name="'+escaped+'"]').forEach(function(field){field.checked=values.indexOf(String(field.value))!==-1})}
-	root.__base3AgentRuntimeConfigUpdateValues=function(values){values=values&&typeof values==='object'?values:{};setValue('llm',values.llm||'');setValue('context_profile',values.context_profile||'');setMulti('tool_profiles[]',values.tool_profiles||[]);setValue('neuron_instructions',values.neuron_instructions||'');setValue('neuron_max_tool_runs',values.neuron_max_tool_runs==null?10:values.neuron_max_tool_runs);setValue('neuron_mcp',values.neuron_mcp_json||'{}')};
+	root.__base3AgentRuntimeConfigUpdateValues=function(values){values=values&&typeof values==='object'?values:{};setValue('llm',values.llm||'');setValue('memory_profile',values.memory_profile||'');setValue('context_profile',values.context_profile||'');setMulti('tool_profiles[]',values.tool_profiles||[]);setValue('neuron_instructions',values.neuron_instructions||'');setValue('neuron_max_tool_runs',values.neuron_max_tool_runs==null?10:values.neuron_max_tool_runs);setValue('neuron_mcp',values.neuron_mcp_json||'{}')};
 	root.__base3AgentRuntimeConfigPrepareSubmit=function(){return true};
 })();
 </script>

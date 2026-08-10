@@ -23,11 +23,9 @@ use NeuronAi\Dto\NeuronConversationScope;
 use RuntimeException;
 
 /**
- * Persists Neuron-native serialized chat histories in a dedicated table.
+ * Persists Neuron-native serialized chat histories and their conversation metadata.
  */
 final class NeuronChatHistoryRepository {
-
-	private const TABLE = 'base3_neuronai_chathistory';
 
 	private bool $schemaEnsured = false;
 
@@ -42,9 +40,10 @@ final class NeuronChatHistoryRepository {
 		$now = date('Y-m-d H:i:s');
 
 		$this->database->nonQuery(
-			'INSERT INTO `' . self::TABLE . '` ('
+			'INSERT INTO `' . NeuronChatHistorySchema::TABLE . '` ('
 			. '`conversation_key`, `conversation_id`, `owner_key`, `config_group`, `config_name`, '
-			. '`runtime_id`, `messages`, `message_count`, `version`, `created_at`, `updated_at`, `last_accessed_at`'
+			. '`runtime_id`, `title`, `title_source`, `opening_message`, `messages`, `message_count`, `version`, '
+			. '`created_at`, `updated_at`, `last_accessed_at`'
 			. ') VALUES ('
 			. $this->quote($scope->getConversationKey()) . ', '
 			. $this->quote($scope->getConversationId()) . ', '
@@ -52,6 +51,8 @@ final class NeuronChatHistoryRepository {
 			. $this->quote($scope->getConfigGroup()) . ', '
 			. $this->quote($scope->getConfigName()) . ', '
 			. $this->quote('neuronai') . ', '
+			. $this->quote('New conversation') . ', '
+			. $this->quote('temporary') . ', NULL, '
 			. $this->quote('[]') . ', 0, 0, '
 			. $this->quote($now) . ', '
 			. $this->quote($now) . ', '
@@ -74,6 +75,109 @@ final class NeuronChatHistoryRepository {
 		}
 
 		return $record;
+	}
+
+	/** @return array<int,array<string,mixed>> */
+	public function listConversations(string $ownerKey, string $configGroup, string $configName): array {
+		$this->ensureSchema();
+		return $this->database->multiQuery(
+			'SELECT `conversation_key`, `conversation_id`, `title`, `title_source`, `opening_message`, '
+			. '`created_at`, `updated_at`, `last_accessed_at` AS `last_active_at` '
+			. 'FROM `' . NeuronChatHistorySchema::TABLE . '` '
+			. 'WHERE `owner_key` = ' . $this->quote($ownerKey) . ' '
+			. 'AND `config_group` = ' . $this->quote($configGroup) . ' '
+			. 'AND `config_name` = ' . $this->quote($configName) . ' '
+			. 'AND `runtime_id` = ' . $this->quote('neuronai') . ' '
+			. 'ORDER BY `last_accessed_at` DESC, `created_at` DESC, `conversation_id` DESC'
+		);
+	}
+
+	/** @return array<string,mixed>|null */
+	public function getConversation(NeuronConversationScope $scope): ?array {
+		$this->ensureSchema();
+		$row = $this->database->singleQuery(
+			'SELECT `conversation_key`, `conversation_id`, `title`, `title_source`, `opening_message`, '
+			. '`messages`, `version`, `created_at`, `updated_at`, `last_accessed_at` AS `last_active_at` '
+			. 'FROM `' . NeuronChatHistorySchema::TABLE . '` '
+			. 'WHERE `conversation_key` = ' . $this->quote($scope->getConversationKey()) . ' '
+			. 'AND `owner_key` = ' . $this->quote($scope->getOwnerKey()) . ' '
+			. 'AND `config_group` = ' . $this->quote($scope->getConfigGroup()) . ' '
+			. 'AND `config_name` = ' . $this->quote($scope->getConfigName()) . ' '
+			. 'AND `runtime_id` = ' . $this->quote('neuronai') . ' LIMIT 1'
+		);
+
+		return is_array($row) ? $row : null;
+	}
+
+	/** @return array<string,mixed> */
+	public function createConversation(
+		NeuronConversationScope $scope,
+		string $title,
+		string $titleSource,
+		string $openingMessage
+	): array {
+		if ($this->getConversation($scope) !== null) {
+			throw new RuntimeException('Conversation already exists: ' . $scope->getConversationId());
+		}
+
+		$this->loadOrCreate($scope);
+		$now = date('Y-m-d H:i:s');
+		$this->database->nonQuery(
+			'UPDATE `' . NeuronChatHistorySchema::TABLE . '` SET '
+			. '`title` = ' . $this->quote($title) . ', '
+			. '`title_source` = ' . $this->quote($titleSource) . ', '
+			. '`opening_message` = ' . $this->nullableQuote($openingMessage) . ', '
+			. '`updated_at` = ' . $this->quote($now) . ', '
+			. '`last_accessed_at` = ' . $this->quote($now) . ' '
+			. 'WHERE `conversation_key` = ' . $this->quote($scope->getConversationKey())
+		);
+
+		return $this->requireConversation($scope);
+	}
+
+	/** @return array<string,mixed> */
+	public function touchConversation(NeuronConversationScope $scope): array {
+		$this->requireConversation($scope);
+		$now = date('Y-m-d H:i:s');
+		$this->database->nonQuery(
+			'UPDATE `' . NeuronChatHistorySchema::TABLE . '` SET '
+			. '`updated_at` = ' . $this->quote($now) . ', '
+			. '`last_accessed_at` = ' . $this->quote($now) . ' '
+			. 'WHERE `conversation_key` = ' . $this->quote($scope->getConversationKey())
+		);
+
+		return $this->requireConversation($scope);
+	}
+
+	/** @return array<string,mixed> */
+	public function renameConversation(
+		NeuronConversationScope $scope,
+		string $title,
+		string $titleSource
+	): array {
+		$current = $this->requireConversation($scope);
+		if ($titleSource === 'automatic' && (string)($current['title_source'] ?? '') === 'manual') {
+			return $current;
+		}
+
+		$now = date('Y-m-d H:i:s');
+		$this->database->nonQuery(
+			'UPDATE `' . NeuronChatHistorySchema::TABLE . '` SET '
+			. '`title` = ' . $this->quote($title) . ', '
+			. '`title_source` = ' . $this->quote($titleSource) . ', '
+			. '`updated_at` = ' . $this->quote($now) . ' '
+			. 'WHERE `conversation_key` = ' . $this->quote($scope->getConversationKey())
+		);
+
+		return $this->requireConversation($scope);
+	}
+
+	public function deleteConversation(NeuronConversationScope $scope): void {
+		$this->requireConversation($scope);
+		$this->database->nonQuery(
+			'DELETE FROM `' . NeuronChatHistorySchema::TABLE . '` '
+			. 'WHERE `conversation_key` = ' . $this->quote($scope->getConversationKey()) . ' LIMIT 1'
+		);
 	}
 
 	/**
@@ -117,7 +221,7 @@ final class NeuronChatHistoryRepository {
 		$now = date('Y-m-d H:i:s');
 
 		$this->database->nonQuery(
-			'UPDATE `' . self::TABLE . '` SET '
+			'UPDATE `' . NeuronChatHistorySchema::TABLE . '` SET '
 			. '`messages` = ' . $this->quote($json) . ', '
 			. '`message_count` = ' . count($messages) . ', '
 			. '`version` = `version` + 1, '
@@ -132,7 +236,7 @@ final class NeuronChatHistoryRepository {
 
 	private function load(string $conversationKey): NeuronChatHistoryRecord {
 		$row = $this->database->singleQuery(
-			'SELECT `messages`, `version` FROM `' . self::TABLE . '` '
+			'SELECT `messages`, `version` FROM `' . NeuronChatHistorySchema::TABLE . '` '
 			. 'WHERE `conversation_key` = ' . $this->quote($conversationKey) . ' LIMIT 1'
 		);
 		if (!is_array($row)) {
@@ -153,6 +257,15 @@ final class NeuronChatHistoryRepository {
 			array_values($messages),
 			max(0, (int)($row['version'] ?? 0))
 		);
+	}
+
+	/** @return array<string,mixed> */
+	private function requireConversation(NeuronConversationScope $scope): array {
+		$row = $this->getConversation($scope);
+		if ($row === null) {
+			throw new RuntimeException('Conversation not found: ' . $scope->getConversationId());
+		}
+		return $row;
 	}
 
 	/**
@@ -183,32 +296,15 @@ final class NeuronChatHistoryRepository {
 			return;
 		}
 
-		$this->database->connect();
-		$this->database->nonQuery('
-			CREATE TABLE IF NOT EXISTS `' . self::TABLE . '` (
-				`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-				`conversation_key` CHAR(64) NOT NULL,
-				`conversation_id` VARCHAR(100) NOT NULL,
-				`owner_key` CHAR(64) NOT NULL,
-				`config_group` VARCHAR(191) NOT NULL,
-				`config_name` VARCHAR(191) NOT NULL,
-				`runtime_id` VARCHAR(64) NOT NULL,
-				`messages` LONGTEXT NOT NULL,
-				`message_count` INT UNSIGNED NOT NULL DEFAULT 0,
-				`version` INT UNSIGNED NOT NULL DEFAULT 0,
-				`created_at` DATETIME NOT NULL,
-				`updated_at` DATETIME NOT NULL,
-				`last_accessed_at` DATETIME NOT NULL,
-				PRIMARY KEY (`id`),
-				UNIQUE KEY `uq_neuronai_conversation` (`conversation_key`),
-				KEY `idx_neuronai_owner_updated` (`owner_key`, `updated_at`),
-				KEY `idx_neuronai_chatbot_updated` (`config_group`, `config_name`, `updated_at`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-		');
+		NeuronChatHistorySchema::ensureTable($this->database);
 		$this->schemaEnsured = true;
 	}
 
 	private function quote(string $value): string {
 		return "'" . $this->database->escape($value) . "'";
+	}
+
+	private function nullableQuote(string $value): string {
+		return $value === '' ? 'NULL' : $this->quote($value);
 	}
 }

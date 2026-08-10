@@ -13,7 +13,7 @@ Neuron `AbstractChatHistory` class. Neuron therefore remains responsible for:
 - the order in which messages are added during the agent loop.
 
 The BASE3 integration is responsible only for persistence, conversation scope
-and concurrent-access protection.
+and optimistic concurrent-write protection.
 
 No file below `src/Vendor` is modified.
 
@@ -23,23 +23,21 @@ The Chatbot browser creates a stable `conversation_id` and stores it in
 `localStorage` under the configured chatbot identity. Every REST and SSE turn
 transmits that ID.
 
-The browser cannot choose the conversation owner. Before a turn is executed,
-`ChatbotConversationContextFactory` replaces any submitted owner value with a
-server-generated SHA-256 key based on:
+The browser cannot choose the conversation owner. `NeuronConversationOwnerResolver`
+creates the server-owned SHA-256 owner key from:
 
 1. the authenticated BASE3 user ID; or
 2. the current BASE3 session ID for anonymous users.
 
-The agent execution context contains:
+The agent execution context supplies the conversation and chatbot identity:
 
 - `conversation_id`;
-- `conversation_owner_key`;
 - `chatbot_config_group`;
 - `chatbot_config_name`.
 
-`NeuronConversationKeyFactory` hashes those values together with the runtime ID.
-A conversation is therefore isolated by user/session, chatbot instance and
-runtime.
+`NeuronConversationKeyFactory` combines those values with the resolved owner key
+and the runtime ID. A conversation is therefore isolated by user/session, chatbot
+instance and runtime.
 
 ## Database table
 
@@ -61,21 +59,15 @@ The one-row-per-conversation model intentionally follows Neuron's own
 `SQLChatHistory` design. It avoids duplicating Neuron's internal message model in
 BASE3 tables and keeps upgrades localized to the public history adapter.
 
-## Locking and concurrency
+## Concurrency
 
-`NeuronChatHistoryFactory` acquires a short-lived StateStore lock before loading
-a conversation. The lock key is:
+The canonical database row owns conversation concurrency. It has an optimistic
+`version`, and every history write updates only the expected version. A
+conflicting write fails instead of silently losing a turn.
 
-```text
-locks.neuronai.chathistory.<conversation_key>
-```
-
-The lock is released in a `finally` block after the agent run. A random token
-prevents an expired and subsequently reacquired lock from being deleted by an
-older request.
-
-The database row also has an optimistic `version`. Every write updates only the
-expected version. A conflicting write fails instead of silently losing a turn.
+NeuronAi deliberately does not keep a second StateStore conversation lock. This
+keeps suspend/resume runs and normal sequential turns on the same persistence
+boundary and avoids stale locks blocking a conversation after a paused tool call.
 
 ## Turn-level persistence
 
@@ -95,18 +87,25 @@ tool-call or tool-result message. `NeuronChatHistoryRepository` removes such an
 incomplete tail when loading and persists the repaired complete prefix before a
 new turn starts.
 
-The browser owner key is resolved before the SSE endpoint closes the PHP
-session. NeuronAi never reopens the session during the long-running LLM request.
+Suggestion requests use the normal runtime with `mode=suggestions`. They load the
+active Neuron history as read-only context, expose no executable tools or MCP
+configuration, and discard the temporary suggestion turn after the model
+response. The literal prompt `Generate suggestions.` and the generated result
+therefore never become conversation messages.
+
+The server-owned owner key is resolved before the long-running Neuron request begins.
+The browser never supplies or selects the owner identity.
 
 ## New conversations
 
-The existing Chatbot "Start new chat" action creates and persists a new
-`conversation_id`, then reloads the widget. The previous history is retained for
-a later thread-list implementation. The new conversation starts with an empty
-Neuron history.
+The Chatbot "Start new chat" action creates a new `conversation_id`. The previous
+history remains available in the conversation list and the new conversation starts
+with an empty Neuron history.
 
-Conversation listing, titles, deletion and retention policies are deliberately
-outside this first memory step.
+The same table also owns conversation titles, activation timestamps and opening-message
+metadata. `NeuronAgentConversationService` exposes this one store through
+`IAgentConversationRuntimeService`, so chat listing, activation, rename, delete and
+restore do not create a second conversation persistence path.
 
 ## Upgrade checks
 
