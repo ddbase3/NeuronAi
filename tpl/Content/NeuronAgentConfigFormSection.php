@@ -74,7 +74,7 @@ $checkedIn = static fn($current, $value): string => in_array((string)$value, arr
 	$label = (string)($option['label'] ?? $id);
 	$description = trim((string)($option['description'] ?? ''));
 ?>
-					<option value="<?php echo $e($id); ?>"<?php echo $selected($values['memory_profile'] ?? '', $id); ?>><?php echo $e($label . ($description !== '' ? ' — ' . $description : '')); ?></option>
+					<option value="<?php echo $e($id); ?>"<?php echo $selected($values['memory_profile'] ?? '', $id); ?>><?php echo $e($label . ($description !== '' ? ' - ' . $description : '')); ?></option>
 <?php } ?>
 				</select>
 				<p class="base3-neuron-config-help"><?php echo $e($t('memory_profile_help', 'Selects the canonical Neuron conversation history used for persistence, chat lists, titles and restore.')); ?></p>
@@ -91,7 +91,7 @@ $checkedIn = static fn($current, $value): string => in_array((string)$value, arr
 	$label = (string)($option['label'] ?? $id);
 	$description = trim((string)($option['description'] ?? ''));
 ?>
-					<option value="<?php echo $e($id); ?>"<?php echo $selected($values['context_profile'] ?? '', $id); ?>><?php echo $e($label . ($description !== '' ? ' — ' . $description : '')); ?></option>
+					<option value="<?php echo $e($id); ?>"<?php echo $selected($values['context_profile'] ?? '', $id); ?>><?php echo $e($label . ($description !== '' ? ' - ' . $description : '')); ?></option>
 <?php } ?>
 				</select>
 				<p class="base3-neuron-config-help"><?php echo $e($t('context_help', 'The selected profile is resolved for every turn. Dynamic page, time and user context is not stored in the conversation history.')); ?></p>

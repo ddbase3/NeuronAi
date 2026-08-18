@@ -199,7 +199,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 		}
 		$language = strtolower(str_replace('_', '-', trim($this->language->getLanguage())));
 		$language = explode('-', $language)[0] ?? 'en';
-		if (!in_array($language, ['de', 'en', 'fr', 'es', 'ru'], true)) {
+		if (!in_array($language, ['ar', 'bg', 'de', 'en', 'es', 'fr', 'hi', 'it', 'pl', 'pt', 'ru', 'zh'], true)) {
 			$language = 'en';
 		}
 		$fallback = $this->readTranslationFile(DIR_PLUGIN . 'NeuronAi/lang/AgentConfigForm/en.ini');
