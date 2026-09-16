@@ -138,3 +138,8 @@ current direct adapter exposes only functions explicitly marked
 `readOnlyHint=true`; mutation and unclassified functions remain unavailable
 until the shared approval and resume lifecycle is implemented. External MCP
 servers remain available independently. See `docs/TOOLS.md`.
+
+## Documentation
+
+- [Frequently Asked Questions](docs/faq.md)
+- [Privacy and data processing](PRIVACY.md)
