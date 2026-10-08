@@ -165,7 +165,7 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 	}
 
 	public function getTemplate(): string {
-		return DIR_PLUGIN . 'NeuronAi/tpl/Content/NeuronAgentConfigFormSection.php';
+		return dirname(__DIR__, 2) . '/tpl/Content/NeuronAgentConfigFormSection.php';
 	}
 
 	public function getTemplateData(array $values, array $options = []): array {
@@ -202,8 +202,8 @@ final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormServi
 		if (!in_array($language, ['ar', 'bg', 'de', 'en', 'es', 'fr', 'hi', 'it', 'pl', 'pt', 'ru', 'zh'], true)) {
 			$language = 'en';
 		}
-		$fallback = $this->readTranslationFile(DIR_PLUGIN . 'NeuronAi/lang/AgentConfigForm/en.ini');
-		$current = $language === 'en' ? [] : $this->readTranslationFile(DIR_PLUGIN . 'NeuronAi/lang/AgentConfigForm/' . $language . '.ini');
+		$fallback = $this->readTranslationFile(dirname(__DIR__, 2) . '/lang/AgentConfigForm/en.ini');
+		$current = $language === 'en' ? [] : $this->readTranslationFile(dirname(__DIR__, 2) . '/lang/AgentConfigForm/' . $language . '.ini');
 		$this->translations = array_merge($fallback, $current);
 		return $this->translations;
 	}
