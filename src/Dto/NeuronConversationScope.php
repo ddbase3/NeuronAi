@@ -15,7 +15,7 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Dto;
+namespace Base3\NeuronAi\Dto;
 
 /**
  * Server-resolved persistence scope for one Neuron conversation.

@@ -1,10 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace NeuronAiTest\Service;
+namespace Base3\NeuronAiTest\Service;
 
-use AssistantFoundation\Dto\AgentContextProfileResult;
-use AssistantFoundation\Dto\AgentInstructionBlock;
-use NeuronAi\Service\NeuronContextInstructionsBuilder;
+use Base3\AssistantFoundation\Dto\AgentContextProfileResult;
+use Base3\AssistantFoundation\Dto\AgentInstructionBlock;
+use Base3\NeuronAi\Service\NeuronContextInstructionsBuilder;
 use PHPUnit\Framework\TestCase;
 
 final class NeuronContextInstructionsBuilderTest extends TestCase {

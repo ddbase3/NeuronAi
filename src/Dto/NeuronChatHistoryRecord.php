@@ -15,7 +15,7 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Dto;
+namespace Base3\NeuronAi\Dto;
 
 /**
  * Persisted Neuron history state loaded for one conversation.

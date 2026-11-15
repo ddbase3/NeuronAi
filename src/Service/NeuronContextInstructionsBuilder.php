@@ -15,10 +15,10 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use AssistantFoundation\Dto\AgentContextProfileResult;
-use AssistantFoundation\Dto\AgentInstructionBlock;
+use Base3\AssistantFoundation\Dto\AgentContextProfileResult;
+use Base3\AssistantFoundation\Dto\AgentInstructionBlock;
 
 /**
  * Maps runtime-neutral context blocks to Neuron system instructions.

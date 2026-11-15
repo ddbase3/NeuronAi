@@ -24,7 +24,7 @@ foreach ($requiredFiles as $file) {
 	}
 }
 
-$foreignNamespacePattern = '~(?<!NeuronAi\\\\Vendor\\\\)(?:NeuronAI|GuzzleHttp|Psr\\\\Http|Inspector|Symfony\\\\Polyfill\\\\Mbstring)\\\\~';
+$foreignNamespacePattern = '~(?<!Base3\\NeuronAi\\\\Vendor\\\\)(?:NeuronAI|GuzzleHttp|Psr\\\\Http|Inspector|Symfony\\\\Polyfill\\\\Mbstring)\\\\~';
 $ignoredTokens = [
 	T_COMMENT,
 	T_DOC_COMMENT,

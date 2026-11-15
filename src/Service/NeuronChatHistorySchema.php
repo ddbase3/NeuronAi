@@ -4,9 +4,9 @@
  * This file is part of NeuronAi for BASE3 Framework.
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use Base3\Database\Api\IDatabase;
+use Base3\CoreFoundation\Database\Api\IDatabase;
 
 /**
  * Owns the private Neuron chat-history table definition.

@@ -4,11 +4,11 @@
  * This file is part of NeuronAi for BASE3 Framework.
  **********************************************************************/
 
-namespace NeuronAi\Migration;
+namespace Base3\NeuronAi\Migration;
 
-use Base3\Database\Api\IDatabase;
-use Base3\Migration\Api\IDatabaseMigration;
-use NeuronAi\Service\NeuronChatHistorySchema;
+use Base3\CoreFoundation\Database\Api\IDatabase;
+use Base3\CoreFoundation\Migration\Api\IDatabaseMigration;
+use Base3\NeuronAi\Service\NeuronChatHistorySchema;
 
 final class Migration2026080701ConversationMetadata implements IDatabaseMigration {
 

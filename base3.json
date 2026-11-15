@@ -1,7 +1,7 @@
 {
 	"manifestVersion": 1,
 	"name": "NeuronAi",
-	"namespace": "NeuronAi",
+	"namespace": "Base3\\NeuronAi",
 	"version": "4.3.0",
 	"description": "BASE3 agent runtime integration for the Neuron AI framework with an isolated embedded runtime.",
 	"license": "GPL-3.0-or-later",

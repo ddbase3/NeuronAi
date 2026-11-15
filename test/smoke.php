@@ -15,9 +15,9 @@ if (
 }
 
 (static function(array $arguments): void {
-	if (!interface_exists('Base3\\Api\\IBase')) {
+	if (!interface_exists('Base3\\CoreFoundation\\Api\\IBase')) {
 		eval(<<<'PHP'
-namespace Base3\Api;
+namespace Base3\CoreFoundation\Api;
 
 interface IBase {
 	public static function getName(): string;
@@ -36,9 +36,9 @@ PHP);
 	spl_autoload_register(static function(string $class) use ($pluginDir, $foundationDir, $runtimeDir): void {
 		$prefixes = [
 			'NeuronAi\\Vendor\\' => $pluginDir . '/src/Vendor/',
-			'NeuronAi\\' => $pluginDir . '/src/',
-			'AssistantFoundation\\' => $foundationDir . '/',
-			'AssistantRuntime\\' => $runtimeDir . '/'
+			'Base3\\NeuronAi\\' => $pluginDir . '/src/',
+			'Base3\\AssistantFoundation\\' => $foundationDir . '/',
+			'Base3\\AssistantRuntime\\' => $runtimeDir . '/'
 		];
 		foreach ($prefixes as $prefix => $directory) {
 			if (!str_starts_with($class, $prefix)) {
@@ -83,15 +83,15 @@ PHP);
 		public function setHttpClient(\NeuronAi\Vendor\NeuronAI\HttpClient\HttpClientInterface $client): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface { return $this; }
 	};
 
-	$providerFactory = new class($provider) implements \NeuronAi\Api\INeuronProviderFactory {
+	$providerFactory = new class($provider) implements \Base3\NeuronAi\Api\INeuronProviderFactory {
 		public function __construct(private readonly \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface $provider) {}
 		public static function getName(): string { return 'fakeproviderfactory'; }
-		public function create(\NeuronAi\Dto\NeuronAgentConfiguration $configuration, \AssistantFoundation\Dto\AgentExecutionRequest $request): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface {
+		public function create(\Base3\NeuronAi\Dto\NeuronAgentConfiguration $configuration, \Base3\AssistantFoundation\Dto\AgentExecutionRequest $request): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface {
 			return $this->provider;
 		}
 	};
 
-	$request = new \AssistantFoundation\Dto\AgentExecutionRequest([
+	$request = new \Base3\AssistantFoundation\Dto\AgentExecutionRequest([
 		'llm' => 'fake-llm',
 		'context_profile' => 'smoke-context',
 		'tool_profiles' => ['smoke-tools']
@@ -103,26 +103,26 @@ PHP);
 		'chatbot_config_name' => 'pc-smoke',
 		'conversation_id' => 'conversation-smoke'
 	]);
-	$chatHistoryFactory = new class implements \NeuronAi\Api\INeuronChatHistoryFactory {
+	$chatHistoryFactory = new class implements \Base3\NeuronAi\Api\INeuronChatHistoryFactory {
 		public static function getName(): string { return 'nullneuronchathistoryfactory'; }
 		public function create(
-			\NeuronAi\Dto\NeuronAgentConfiguration $configuration,
-			\AssistantFoundation\Dto\AgentExecutionRequest $request
-		): ?\NeuronAi\Dto\NeuronChatHistoryLease {
+			\Base3\NeuronAi\Dto\NeuronAgentConfiguration $configuration,
+			\Base3\AssistantFoundation\Dto\AgentExecutionRequest $request
+		): ?\Base3\NeuronAi\Dto\NeuronChatHistoryLease {
 			return null;
 		}
 	};
-	$contextProfileService = new class implements \AssistantFoundation\Api\IAgentContextProfileService {
+	$contextProfileService = new class implements \Base3\AssistantFoundation\Api\IAgentContextProfileService {
 		public static function getName(): string { return 'emptyagentcontextprofileservice'; }
 		public function getOptions(): array { return [['id' => 'smoke-context', 'label' => 'Smoke context']]; }
 		public function hasProfile(string $profileId): bool { return $profileId === 'smoke-context'; }
 		public function build(
 			string $profileId,
-			\AssistantFoundation\Dto\AgentExecutionRequest $request
-		): \AssistantFoundation\Dto\AgentContextProfileResult {
-			return new \AssistantFoundation\Dto\AgentContextProfileResult(
+			\Base3\AssistantFoundation\Dto\AgentExecutionRequest $request
+		): \Base3\AssistantFoundation\Dto\AgentContextProfileResult {
+			return new \Base3\AssistantFoundation\Dto\AgentContextProfileResult(
 				$profileId,
-				[new \AssistantFoundation\Dto\AgentInstructionBlock(
+				[new \Base3\AssistantFoundation\Dto\AgentInstructionBlock(
 					'smoke-current-page',
 					'Current page is Smoke Test.',
 					10,
@@ -131,7 +131,7 @@ PHP);
 			);
 		}
 	};
-	$capability = new \AssistantFoundation\Dto\AgentCapability(
+	$capability = new \Base3\AssistantFoundation\Dto\AgentCapability(
 		'smoke_echo',
 		'Smoke echo',
 		'Echoes one input value.',
@@ -154,17 +154,17 @@ PHP);
 			]
 		]
 	);
-	$toolSet = new class($capability) implements \AssistantFoundation\Api\IAgentToolSet {
-		private \AssistantFoundation\Dto\AgentCapabilityCatalog $catalog;
+	$toolSet = new class($capability) implements \Base3\AssistantFoundation\Api\IAgentToolSet {
+		private \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog $catalog;
 		public array $metadata = [];
-		public function __construct(\AssistantFoundation\Dto\AgentCapability $capability) {
-			$this->catalog = new \AssistantFoundation\Dto\AgentCapabilityCatalog([$capability]);
+		public function __construct(\Base3\AssistantFoundation\Dto\AgentCapability $capability) {
+			$this->catalog = new \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog([$capability]);
 		}
-		public function getCatalog(): \AssistantFoundation\Dto\AgentCapabilityCatalog { return $this->catalog; }
+		public function getCatalog(): \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog { return $this->catalog; }
 		public function getWarnings(): array { return []; }
-		public function execute(string $callId, string $toolName, array $arguments, array $metadata = []): \AssistantFoundation\Dto\AgentToolResult {
+		public function execute(string $callId, string $toolName, array $arguments, array $metadata = []): \Base3\AssistantFoundation\Dto\AgentToolResult {
 			$this->metadata = $metadata;
-			return \AssistantFoundation\Dto\AgentToolResult::success(
+			return \Base3\AssistantFoundation\Dto\AgentToolResult::success(
 				$callId,
 				$toolName,
 				$arguments,
@@ -172,34 +172,34 @@ PHP);
 			);
 		}
 	};
-	$toolProfileService = new class($toolSet) implements \AssistantFoundation\Api\IAgentToolProfileService {
-		public function __construct(private readonly \AssistantFoundation\Api\IAgentToolSet $toolSet) {}
+	$toolProfileService = new class($toolSet) implements \Base3\AssistantFoundation\Api\IAgentToolProfileService {
+		public function __construct(private readonly \Base3\AssistantFoundation\Api\IAgentToolSet $toolSet) {}
 		public static function getName(): string { return 'smoketoolprofileservice'; }
 		public function getOptions(): array { return [['id' => 'smoke-tools', 'label' => 'Smoke tools']]; }
 		public function hasProfile(string $profileId): bool { return $profileId === 'smoke-tools'; }
-		public function resolve(array $profileIds, \AssistantFoundation\Dto\AgentExecutionRequest $request): \AssistantFoundation\Api\IAgentToolSet {
+		public function resolve(array $profileIds, \Base3\AssistantFoundation\Dto\AgentExecutionRequest $request): \Base3\AssistantFoundation\Api\IAgentToolSet {
 			return $this->toolSet;
 		}
 	};
-	$toolFactory = new \NeuronAi\Service\NeuronAgentToolFactory();
-	$suspensionRepository = new class implements \AssistantFoundation\Api\IAgentSuspensionRepository {
-		public function create(\AssistantFoundation\Dto\AgentSuspension $suspension, int $ttlSeconds): string { throw new \LogicException('Not used by the read-only smoke test.'); }
-		public function findPending(string $scopeId): ?\AssistantFoundation\Dto\AgentSuspensionState { return null; }
-		public function claim(string $resumeHandle): \AssistantFoundation\Dto\AgentSuspensionClaim { throw new \LogicException('Not used by the read-only smoke test.'); }
-		public function release(\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void {}
-		public function consume(\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void {}
+	$toolFactory = new \Base3\NeuronAi\Service\NeuronAgentToolFactory();
+	$suspensionRepository = new class implements \Base3\AssistantFoundation\Api\IAgentSuspensionRepository {
+		public function create(\Base3\AssistantFoundation\Dto\AgentSuspension $suspension, int $ttlSeconds): string { throw new \LogicException('Not used by the read-only smoke test.'); }
+		public function findPending(string $scopeId): ?\Base3\AssistantFoundation\Dto\AgentSuspensionState { return null; }
+		public function claim(string $resumeHandle): \Base3\AssistantFoundation\Dto\AgentSuspensionClaim { throw new \LogicException('Not used by the read-only smoke test.'); }
+		public function release(\Base3\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void {}
+		public function consume(\Base3\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void {}
 	};
-	$service = new \NeuronAi\Service\NeuronAgentExecutionService(
-		new \NeuronAi\Service\NeuronAgentFactory($providerFactory, $toolFactory),
+	$service = new \Base3\NeuronAi\Service\NeuronAgentExecutionService(
+		new \Base3\NeuronAi\Service\NeuronAgentFactory($providerFactory, $toolFactory),
 		$chatHistoryFactory,
-		new \NeuronAi\Service\NeuronExecutionEventMapper(),
+		new \Base3\NeuronAi\Service\NeuronExecutionEventMapper(),
 		$contextProfileService,
 		$toolProfileService,
-		new \NeuronAi\Service\NeuronContextInstructionsBuilder(),
+		new \Base3\NeuronAi\Service\NeuronContextInstructionsBuilder(),
 		$suspensionRepository,
 		$toolFactory
 	);
-	$sink = new \AssistantRuntime\Service\CollectingAgentEventSink();
+	$sink = new \Base3\AssistantRuntime\Service\CollectingAgentEventSink();
 	$result = $service->execute($request, $sink);
 
 	$content = $result->getOutput()['assistant']['message']['content'] ?? null;
@@ -251,20 +251,20 @@ PHP);
 		throw new \RuntimeException('Neuron tool adapter did not execute the BASE3 tool set.');
 	}
 
-	$failingToolSet = new class($capability) implements \AssistantFoundation\Api\IAgentToolSet {
-		private \AssistantFoundation\Dto\AgentCapabilityCatalog $catalog;
-		public function __construct(\AssistantFoundation\Dto\AgentCapability $capability) {
-			$this->catalog = new \AssistantFoundation\Dto\AgentCapabilityCatalog([$capability]);
+	$failingToolSet = new class($capability) implements \Base3\AssistantFoundation\Api\IAgentToolSet {
+		private \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog $catalog;
+		public function __construct(\Base3\AssistantFoundation\Dto\AgentCapability $capability) {
+			$this->catalog = new \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog([$capability]);
 		}
-		public function getCatalog(): \AssistantFoundation\Dto\AgentCapabilityCatalog { return $this->catalog; }
+		public function getCatalog(): \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog { return $this->catalog; }
 		public function getWarnings(): array { return []; }
-		public function execute(string $callId, string $toolName, array $arguments, array $metadata = []): \AssistantFoundation\Dto\AgentToolResult {
-			return \AssistantFoundation\Dto\AgentToolResult::failure($callId, $toolName, $arguments, 'smoke_failure', 'Expected failure');
+		public function execute(string $callId, string $toolName, array $arguments, array $metadata = []): \Base3\AssistantFoundation\Dto\AgentToolResult {
+			return \Base3\AssistantFoundation\Dto\AgentToolResult::failure($callId, $toolName, $arguments, 'smoke_failure', 'Expected failure');
 		}
 	};
 	$failingTool = $toolFactory->create($failingToolSet)[0];
 	$failingTool->setCallId('smoke-failure')->setInputs(['value' => 'Atlas'])->execute();
-	$failureEvents = (new \NeuronAi\Service\NeuronExecutionEventMapper())->map(
+	$failureEvents = (new \Base3\NeuronAi\Service\NeuronExecutionEventMapper())->map(
 		new \NeuronAi\Vendor\NeuronAI\Chat\Messages\Stream\Chunks\ToolResultChunk($failingTool)
 	);
 	if (($failureEvents[0]->getName() ?? '') !== 'tool.failed') {
@@ -274,13 +274,13 @@ PHP);
 
 	$provider->lastSystemPrompt = null;
 	$provider->lastTools = [$nativeTool];
-	$textTaskService = new \NeuronAi\Service\NeuronAgentTextTaskService(
-		new \NeuronAi\Service\NeuronAgentFactory($providerFactory, $toolFactory),
+	$textTaskService = new \Base3\NeuronAi\Service\NeuronAgentTextTaskService(
+		new \Base3\NeuronAi\Service\NeuronAgentFactory($providerFactory, $toolFactory),
 		$contextProfileService,
 		$toolProfileService,
-		new \NeuronAi\Service\NeuronContextInstructionsBuilder()
+		new \Base3\NeuronAi\Service\NeuronContextInstructionsBuilder()
 	);
-	$textTaskResult = $textTaskService->executeTextTask(new \AssistantFoundation\Dto\AgentTextTaskRequest(
+	$textTaskResult = $textTaskService->executeTextTask(new \Base3\AssistantFoundation\Dto\AgentTextTaskRequest(
 		[
 			'llm' => 'fake-llm',
 			'context_profile' => 'smoke-context',
@@ -313,24 +313,24 @@ PHP);
 		throw new \RuntimeException('Neuron isolated text task did not report its runtime.');
 	}
 
-	$modelProvider = new class implements \AssistantFoundation\Api\IAiModelConfigurationProvider {
+	$modelProvider = new class implements \Base3\AssistantFoundation\Api\IAiModelConfigurationProvider {
 		public static function getName(): string { return 'fakemodelconfigurationprovider'; }
 		public function getOptions(): array { return []; }
 		public function has(string $id): bool { return in_array($id, ['openai', 'compatible', 'mistral'], true); }
-		public function get(string $id): \AssistantFoundation\Dto\AiModelConfiguration {
+		public function get(string $id): \Base3\AssistantFoundation\Dto\AiModelConfiguration {
 			return match ($id) {
-				'openai' => new \AssistantFoundation\Dto\AiModelConfiguration('openai', 'OpenAI', 'openai-chat', 'model', 'https://api.openai.com/v1/chat/completions', 'fake-key'),
-				'compatible' => new \AssistantFoundation\Dto\AiModelConfiguration('compatible', 'Compatible', 'openai-compatible-chat', 'model', 'https://example.invalid/api/v1/chat/completions', ''),
-				'mistral' => new \AssistantFoundation\Dto\AiModelConfiguration('mistral', 'Mistral', 'mistral-chat', 'model', 'https://api.mistral.ai/v1/chat/completions', 'fake-key'),
+				'openai' => new \Base3\AssistantFoundation\Dto\AiModelConfiguration('openai', 'OpenAI', 'openai-chat', 'model', 'https://api.openai.com/v1/chat/completions', 'fake-key'),
+				'compatible' => new \Base3\AssistantFoundation\Dto\AiModelConfiguration('compatible', 'Compatible', 'openai-compatible-chat', 'model', 'https://example.invalid/api/v1/chat/completions', ''),
+				'mistral' => new \Base3\AssistantFoundation\Dto\AiModelConfiguration('mistral', 'Mistral', 'mistral-chat', 'model', 'https://api.mistral.ai/v1/chat/completions', 'fake-key'),
 				default => throw new \RuntimeException('Unknown fake model: ' . $id)
 			};
 		}
 	};
 
-	$runtimeProviderFactory = new \NeuronAi\Service\NeuronProviderFactory($modelProvider);
+	$runtimeProviderFactory = new \Base3\NeuronAi\Service\NeuronProviderFactory($modelProvider);
 	$runtimeProviders = [];
 	foreach (['openai', 'compatible', 'mistral'] as $llmId) {
-		$configuration = \NeuronAi\Dto\NeuronAgentConfiguration::fromArrays(['llm' => $llmId], []);
+		$configuration = \Base3\NeuronAi\Dto\NeuronAgentConfiguration::fromArrays(['llm' => $llmId], []);
 		$runtimeProvider = $runtimeProviderFactory->create($configuration, $request);
 		if (!$runtimeProvider instanceof \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface) {
 			throw new \RuntimeException('Provider factory returned an invalid provider.');
@@ -351,7 +351,7 @@ PHP);
 		public function withHeaders(array $headers): \NeuronAi\Vendor\NeuronAI\HttpClient\HttpClientInterface { return $this; }
 		public function withTimeout(float $timeout): \NeuronAi\Vendor\NeuronAI\HttpClient\HttpClientInterface { return $this; }
 	};
-	$endpointClient = new \NeuronAi\Http\ConfiguredEndpointHttpClient(
+	$endpointClient = new \Base3\NeuronAi\Http\ConfiguredEndpointHttpClient(
 		'https://example.invalid/custom/chat/completions',
 		$recordingClient
 	);

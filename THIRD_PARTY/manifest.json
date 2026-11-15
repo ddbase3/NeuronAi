@@ -1,6 +1,6 @@
 {
     "generated_at": "2026-07-21",
-    "scope_prefix": "NeuronAi\\Vendor",
+    "scope_prefix": "Base3\\NeuronAi\\Vendor",
     "php_minimum": "8.1",
     "build_lock_sha256": "eb41fdb97942b3d8a7a74a35f4b2a4139301f235271fabdc9f251b54b8f2e815",
     "vendor_tree_sha256": "84c6458863537744ee73a27baac869821fa910ee1263148ea3f1ceb4d694767e",

@@ -15,14 +15,14 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use AssistantFoundation\Api\IAiModelConfigurationProvider;
-use AssistantFoundation\Dto\AgentExecutionRequest;
-use NeuronAi\Api\INeuronChatHistoryFactory;
-use NeuronAi\Chat\History\DatabaseNeuronChatHistory;
-use NeuronAi\Dto\NeuronAgentConfiguration;
-use NeuronAi\Dto\NeuronChatHistoryLease;
+use Base3\AssistantFoundation\Api\IAiModelConfigurationProvider;
+use Base3\AssistantFoundation\Dto\AgentExecutionRequest;
+use Base3\NeuronAi\Api\INeuronChatHistoryFactory;
+use Base3\NeuronAi\Chat\History\DatabaseNeuronChatHistory;
+use Base3\NeuronAi\Dto\NeuronAgentConfiguration;
+use Base3\NeuronAi\Dto\NeuronChatHistoryLease;
 
 /**
  * Creates database-backed Neuron chat histories when a conversation scope is

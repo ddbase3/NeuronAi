@@ -15,11 +15,11 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use Base3\Database\Api\IDatabase;
-use NeuronAi\Dto\NeuronChatHistoryRecord;
-use NeuronAi\Dto\NeuronConversationScope;
+use Base3\CoreFoundation\Database\Api\IDatabase;
+use Base3\NeuronAi\Dto\NeuronChatHistoryRecord;
+use Base3\NeuronAi\Dto\NeuronConversationScope;
 use RuntimeException;
 
 /**

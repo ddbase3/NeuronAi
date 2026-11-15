@@ -15,7 +15,7 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Http;
+namespace Base3\NeuronAi\Http;
 
 use NeuronAi\Vendor\NeuronAI\HttpClient\GuzzleHttpClient;
 use NeuronAi\Vendor\NeuronAI\HttpClient\HttpClientInterface;

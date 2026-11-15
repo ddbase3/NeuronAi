@@ -15,10 +15,10 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use AssistantFoundation\Dto\AgentExecutionRequest;
-use NeuronAi\Dto\NeuronConversationScope;
+use Base3\AssistantFoundation\Dto\AgentExecutionRequest;
+use Base3\NeuronAi\Dto\NeuronConversationScope;
 
 /**
  * Builds a persistent conversation scope from server-owned runtime identity.

@@ -15,7 +15,7 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi;
+namespace Base3\NeuronAi;
 
 /**
  * Loads function-only dependencies that cannot be discovered by class maps.

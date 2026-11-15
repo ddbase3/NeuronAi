@@ -68,7 +68,7 @@ All NeuronAi defaults use `IContainer::NOOVERWRITE`:
 - `NeuronAgentConfigFormService`.
 
 The provider factory depends only on
-`AssistantFoundation\Api\IAiModelConfigurationProvider`. A host can replace
+`Base3\AssistantFoundation\Api\IAiModelConfigurationProvider`. A host can replace
 that provider without changing NeuronAi. See `docs/DI.md`.
 
 ## Persistent conversation memory

@@ -16,15 +16,15 @@ if (
 }
 
 (static function(array $arguments): void {
-	if (!interface_exists('Base3\\Api\\IBase')) {
+	if (!interface_exists('Base3\\CoreFoundation\\Api\\IBase')) {
 		eval(<<<'PHP'
-namespace Base3\Api;
+namespace Base3\CoreFoundation\Api;
 interface IBase { public static function getName(): string; }
 PHP);
 	}
-	if (!interface_exists('Base3\\Database\\Api\\IDatabase')) {
+	if (!interface_exists('Base3\\CoreFoundation\\Database\\Api\\IDatabase')) {
 		eval(<<<'PHP'
-namespace Base3\Database\Api;
+namespace Base3\CoreFoundation\Database\Api;
 interface IDatabase {
 	public function connect(): void;
 	public function connected(): bool;
@@ -46,18 +46,18 @@ interface IDatabase {
 }
 PHP);
 	}
-	if (!interface_exists('Base3\\Accesscontrol\\Api\\IAccesscontrol')) {
+	if (!interface_exists('Base3\\CoreFoundation\\Accesscontrol\\Api\\IAccesscontrol')) {
 		eval(<<<'PHP'
-namespace Base3\Accesscontrol\Api;
+namespace Base3\CoreFoundation\Accesscontrol\Api;
 interface IAccesscontrol {
 	public function getUserId();
 	public function authenticate(): void;
 }
 PHP);
 	}
-	if (!interface_exists('Base3\\Session\\Api\\ISession')) {
+	if (!interface_exists('Base3\\CoreFoundation\\Session\\Api\\ISession')) {
 		eval(<<<'PHP'
-namespace Base3\Session\Api;
+namespace Base3\CoreFoundation\Session\Api;
 interface ISession {
 	public function started(): bool;
 	public function getId(): string;
@@ -76,8 +76,8 @@ PHP);
 	spl_autoload_register(static function(string $class) use ($pluginDir, $foundationDir): void {
 		$prefixes = [
 			'NeuronAi\\Vendor\\' => $pluginDir . '/src/Vendor/',
-			'NeuronAi\\' => $pluginDir . '/src/',
-			'AssistantFoundation\\' => $foundationDir . '/'
+			'Base3\\NeuronAi\\' => $pluginDir . '/src/',
+			'Base3\\AssistantFoundation\\' => $foundationDir . '/'
 		];
 		foreach ($prefixes as $prefix => $directory) {
 			if (!str_starts_with($class, $prefix)) {
@@ -93,7 +93,7 @@ PHP);
 
 	\NeuronAi\VendorBootstrap::init();
 
-	$database = new class implements \Base3\Database\Api\IDatabase {
+	$database = new class implements \Base3\CoreFoundation\Database\Api\IDatabase {
 		private ?array $row = null;
 		private int $affectedRows = 0;
 		private bool $connected = false;
@@ -147,11 +147,11 @@ PHP);
 		public function errorMessage(): string { return ''; }
 	};
 
-	$accesscontrol = new class implements \Base3\Accesscontrol\Api\IAccesscontrol {
+	$accesscontrol = new class implements \Base3\CoreFoundation\Accesscontrol\Api\IAccesscontrol {
 		public function getUserId() { return 42; }
 		public function authenticate(): void {}
 	};
-	$session = new class implements \Base3\Session\Api\ISession {
+	$session = new class implements \Base3\CoreFoundation\Session\Api\ISession {
 		private array $values = [];
 		public function started(): bool { return true; }
 		public function getId(): string { return 'conversation-smoke-session'; }
@@ -162,12 +162,12 @@ PHP);
 		public function has(string $key): bool { return array_key_exists($key, $this->values); }
 		public function remove(string $key): void { unset($this->values[$key]); }
 	};
-	$modelProvider = new class implements \AssistantFoundation\Api\IAiModelConfigurationProvider {
+	$modelProvider = new class implements \Base3\AssistantFoundation\Api\IAiModelConfigurationProvider {
 		public static function getName(): string { return 'conversation-smoke-models'; }
 		public function getOptions(): array { return []; }
 		public function has(string $id): bool { return $id === 'fake-llm'; }
-		public function get(string $id): \AssistantFoundation\Dto\AiModelConfiguration {
-			return new \AssistantFoundation\Dto\AiModelConfiguration(
+		public function get(string $id): \Base3\AssistantFoundation\Dto\AiModelConfiguration {
+			return new \Base3\AssistantFoundation\Dto\AiModelConfiguration(
 				'fake-llm',
 				'Fake LLM',
 				'openai-chat',
@@ -179,18 +179,18 @@ PHP);
 		}
 	};
 
-	$repository = new \NeuronAi\Service\NeuronChatHistoryRepository($database);
-	$factory = new \NeuronAi\Service\NeuronChatHistoryFactory(
-		new \NeuronAi\Service\NeuronConversationKeyFactory(),
-		new \NeuronAi\Service\NeuronConversationOwnerResolver($accesscontrol, $session),
+	$repository = new \Base3\NeuronAi\Service\NeuronChatHistoryRepository($database);
+	$factory = new \Base3\NeuronAi\Service\NeuronChatHistoryFactory(
+		new \Base3\NeuronAi\Service\NeuronConversationKeyFactory(),
+		new \Base3\NeuronAi\Service\NeuronConversationOwnerResolver($accesscontrol, $session),
 		$repository,
 		$modelProvider
 	);
-	$configuration = \NeuronAi\Dto\NeuronAgentConfiguration::fromArrays([
+	$configuration = \Base3\NeuronAi\Dto\NeuronAgentConfiguration::fromArrays([
 		'llm' => 'fake-llm',
-		'memory_profile' => \NeuronAi\Dto\NeuronAgentConfiguration::DEFAULT_MEMORY_PROFILE
+		'memory_profile' => \Base3\NeuronAi\Dto\NeuronAgentConfiguration::DEFAULT_MEMORY_PROFILE
 	], []);
-	$request = new \AssistantFoundation\Dto\AgentExecutionRequest(
+	$request = new \Base3\AssistantFoundation\Dto\AgentExecutionRequest(
 		['llm' => 'fake-llm'],
 		['prompt' => 'Hello', 'mode' => 'chat'],
 		[
@@ -201,7 +201,7 @@ PHP);
 	);
 
 	$first = $factory->create($configuration, $request);
-	if (!$first instanceof \NeuronAi\Dto\NeuronChatHistoryLease) {
+	if (!$first instanceof \Base3\NeuronAi\Dto\NeuronChatHistoryLease) {
 		throw new \RuntimeException('Conversation smoke test did not create persistent history.');
 	}
 	$first->getHistory()->addMessage(new \NeuronAi\Vendor\NeuronAI\Chat\Messages\UserMessage('Existing question'));
@@ -209,7 +209,7 @@ PHP);
 	$first->commit();
 
 	$second = $factory->create($configuration, $request);
-	if (!$second instanceof \NeuronAi\Dto\NeuronChatHistoryLease) {
+	if (!$second instanceof \Base3\NeuronAi\Dto\NeuronChatHistoryLease) {
 		throw new \RuntimeException('Conversation could not be opened a second time.');
 	}
 	if (count($second->getHistory()->getMessages()) !== 2) {
@@ -233,53 +233,53 @@ PHP);
 		public function structured(array|\NeuronAi\Vendor\NeuronAI\Chat\Messages\Message $messages, string $class, array $response_schema): \NeuronAi\Vendor\NeuronAI\Chat\Messages\Message { return new \NeuronAi\Vendor\NeuronAI\Chat\Messages\AssistantMessage('["Suggestion"]'); }
 		public function setHttpClient(\NeuronAi\Vendor\NeuronAI\HttpClient\HttpClientInterface $client): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface { return $this; }
 	};
-	$providerFactory = new class($provider) implements \NeuronAi\Api\INeuronProviderFactory {
+	$providerFactory = new class($provider) implements \Base3\NeuronAi\Api\INeuronProviderFactory {
 		public function __construct(private readonly \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface $provider) {}
 		public static function getName(): string { return 'conversation-smoke-provider'; }
-		public function create(\NeuronAi\Dto\NeuronAgentConfiguration $configuration, \AssistantFoundation\Dto\AgentExecutionRequest $request): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface { return $this->provider; }
+		public function create(\Base3\NeuronAi\Dto\NeuronAgentConfiguration $configuration, \Base3\AssistantFoundation\Dto\AgentExecutionRequest $request): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface { return $this->provider; }
 	};
-	$contextProfiles = new class implements \AssistantFoundation\Api\IAgentContextProfileService {
+	$contextProfiles = new class implements \Base3\AssistantFoundation\Api\IAgentContextProfileService {
 		public static function getName(): string { return 'conversation-smoke-context'; }
 		public function getOptions(): array { return []; }
 		public function hasProfile(string $profileId): bool { return false; }
-		public function build(string $profileId, \AssistantFoundation\Dto\AgentExecutionRequest $request): \AssistantFoundation\Dto\AgentContextProfileResult { return new \AssistantFoundation\Dto\AgentContextProfileResult(''); }
+		public function build(string $profileId, \Base3\AssistantFoundation\Dto\AgentExecutionRequest $request): \Base3\AssistantFoundation\Dto\AgentContextProfileResult { return new \Base3\AssistantFoundation\Dto\AgentContextProfileResult(''); }
 	};
-	$emptyToolSet = new class implements \AssistantFoundation\Api\IAgentToolSet {
-		private \AssistantFoundation\Dto\AgentCapabilityCatalog $catalog;
-		public function __construct() { $this->catalog = new \AssistantFoundation\Dto\AgentCapabilityCatalog([]); }
-		public function getCatalog(): \AssistantFoundation\Dto\AgentCapabilityCatalog { return $this->catalog; }
+	$emptyToolSet = new class implements \Base3\AssistantFoundation\Api\IAgentToolSet {
+		private \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog $catalog;
+		public function __construct() { $this->catalog = new \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog([]); }
+		public function getCatalog(): \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog { return $this->catalog; }
 		public function getWarnings(): array { return []; }
-		public function execute(string $callId, string $toolName, array $arguments, array $metadata = []): \AssistantFoundation\Dto\AgentToolResult { throw new \LogicException('Suggestion turns must not execute tools.'); }
+		public function execute(string $callId, string $toolName, array $arguments, array $metadata = []): \Base3\AssistantFoundation\Dto\AgentToolResult { throw new \LogicException('Suggestion turns must not execute tools.'); }
 	};
-	$toolProfiles = new class($emptyToolSet) implements \AssistantFoundation\Api\IAgentToolProfileService {
-		public function __construct(private readonly \AssistantFoundation\Api\IAgentToolSet $toolSet) {}
+	$toolProfiles = new class($emptyToolSet) implements \Base3\AssistantFoundation\Api\IAgentToolProfileService {
+		public function __construct(private readonly \Base3\AssistantFoundation\Api\IAgentToolSet $toolSet) {}
 		public static function getName(): string { return 'conversation-smoke-tools'; }
 		public function getOptions(): array { return []; }
 		public function hasProfile(string $profileId): bool { return false; }
-		public function resolve(array $profileIds, \AssistantFoundation\Dto\AgentExecutionRequest $request): \AssistantFoundation\Api\IAgentToolSet { return $this->toolSet; }
+		public function resolve(array $profileIds, \Base3\AssistantFoundation\Dto\AgentExecutionRequest $request): \Base3\AssistantFoundation\Api\IAgentToolSet { return $this->toolSet; }
 	};
-	$suspensions = new class implements \AssistantFoundation\Api\IAgentSuspensionRepository {
-		public function create(\AssistantFoundation\Dto\AgentSuspension $suspension, int $ttlSeconds): string { throw new \LogicException('Suggestion turns must not suspend.'); }
-		public function findPending(string $scopeId): ?\AssistantFoundation\Dto\AgentSuspensionState { return null; }
-		public function claim(string $resumeHandle): \AssistantFoundation\Dto\AgentSuspensionClaim { throw new \LogicException('Suggestion turns do not resume.'); }
-		public function release(\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void {}
-		public function consume(\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void {}
+	$suspensions = new class implements \Base3\AssistantFoundation\Api\IAgentSuspensionRepository {
+		public function create(\Base3\AssistantFoundation\Dto\AgentSuspension $suspension, int $ttlSeconds): string { throw new \LogicException('Suggestion turns must not suspend.'); }
+		public function findPending(string $scopeId): ?\Base3\AssistantFoundation\Dto\AgentSuspensionState { return null; }
+		public function claim(string $resumeHandle): \Base3\AssistantFoundation\Dto\AgentSuspensionClaim { throw new \LogicException('Suggestion turns do not resume.'); }
+		public function release(\Base3\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void {}
+		public function consume(\Base3\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void {}
 	};
-	$toolFactory = new \NeuronAi\Service\NeuronAgentToolFactory();
-	$executionService = new \NeuronAi\Service\NeuronAgentExecutionService(
-		new \NeuronAi\Service\NeuronAgentFactory($providerFactory, $toolFactory),
+	$toolFactory = new \Base3\NeuronAi\Service\NeuronAgentToolFactory();
+	$executionService = new \Base3\NeuronAi\Service\NeuronAgentExecutionService(
+		new \Base3\NeuronAi\Service\NeuronAgentFactory($providerFactory, $toolFactory),
 		$factory,
-		new \NeuronAi\Service\NeuronExecutionEventMapper(),
+		new \Base3\NeuronAi\Service\NeuronExecutionEventMapper(),
 		$contextProfiles,
 		$toolProfiles,
-		new \NeuronAi\Service\NeuronContextInstructionsBuilder(),
+		new \Base3\NeuronAi\Service\NeuronContextInstructionsBuilder(),
 		$suspensions,
 		$toolFactory
 	);
-	$suggestionRequest = new \AssistantFoundation\Dto\AgentExecutionRequest(
+	$suggestionRequest = new \Base3\AssistantFoundation\Dto\AgentExecutionRequest(
 		[
 			'llm' => 'fake-llm',
-			'memory_profile' => \NeuronAi\Dto\NeuronAgentConfiguration::DEFAULT_MEMORY_PROFILE,
+			'memory_profile' => \Base3\NeuronAi\Dto\NeuronAgentConfiguration::DEFAULT_MEMORY_PROFILE,
 			'tool_profiles' => ['must-not-run']
 		],
 		['prompt' => 'Generate suggestions.', 'mode' => 'suggestions'],
@@ -298,7 +298,7 @@ PHP);
 	}
 
 	$third = $factory->create($configuration, $request);
-	if (!$third instanceof \NeuronAi\Dto\NeuronChatHistoryLease) {
+	if (!$third instanceof \Base3\NeuronAi\Dto\NeuronChatHistoryLease) {
 		throw new \RuntimeException('Conversation could not be reopened after a read-only turn.');
 	}
 	$messages = $third->getHistory()->getMessages();

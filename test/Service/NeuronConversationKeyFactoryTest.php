@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace NeuronAiTest\Service;
+namespace Base3\NeuronAiTest\Service;
 
-use AssistantFoundation\Dto\AgentExecutionRequest;
-use NeuronAi\Service\NeuronConversationKeyFactory;
+use Base3\AssistantFoundation\Dto\AgentExecutionRequest;
+use Base3\NeuronAi\Service\NeuronConversationKeyFactory;
 use PHPUnit\Framework\TestCase;
 
 final class NeuronConversationKeyFactoryTest extends TestCase {

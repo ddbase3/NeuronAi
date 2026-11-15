@@ -15,9 +15,9 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Dto;
+namespace Base3\NeuronAi\Dto;
 
-use NeuronAi\Chat\History\DatabaseNeuronChatHistory;
+use Base3\NeuronAi\Chat\History\DatabaseNeuronChatHistory;
 
 /**
  * Holds a buffered chat history for one agent run.

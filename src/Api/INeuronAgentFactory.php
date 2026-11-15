@@ -15,12 +15,12 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Api;
+namespace Base3\NeuronAi\Api;
 
-use AssistantFoundation\Api\IAgentToolSet;
-use AssistantFoundation\Dto\AgentExecutionRequest;
-use Base3\Api\IBase;
-use NeuronAi\Dto\NeuronAgentConfiguration;
+use Base3\AssistantFoundation\Api\IAgentToolSet;
+use Base3\AssistantFoundation\Dto\AgentExecutionRequest;
+use Base3\CoreFoundation\Api\IBase;
+use Base3\NeuronAi\Dto\NeuronAgentConfiguration;
 use NeuronAi\Vendor\NeuronAI\Agent\AgentInterface;
 
 /**

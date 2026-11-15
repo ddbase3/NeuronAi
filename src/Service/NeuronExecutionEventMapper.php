@@ -15,10 +15,10 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use AssistantFoundation\Dto\AgentExecutionEvent;
-use NeuronAi\Tool\NeuronAgentTool;
+use Base3\AssistantFoundation\Dto\AgentExecutionEvent;
+use Base3\NeuronAi\Tool\NeuronAgentTool;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\Stream\Chunks\AudioChunk;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\Stream\Chunks\ImageChunk;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\Stream\Chunks\ReasoningChunk;

@@ -15,14 +15,14 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use AssistantFoundation\Api\IAgentContextProfileService;
-use AssistantFoundation\Api\IAgentRuntimeConfigFormService;
-use AssistantFoundation\Api\IAgentToolProfileService;
-use AssistantFoundation\Api\IAiModelConfigurationProvider;
-use Base3\Api\IRequest;
-use Base3\Language\Api\ILanguage;
+use Base3\AssistantFoundation\Api\IAgentContextProfileService;
+use Base3\AssistantFoundation\Api\IAgentRuntimeConfigFormService;
+use Base3\AssistantFoundation\Api\IAgentToolProfileService;
+use Base3\AssistantFoundation\Api\IAiModelConfigurationProvider;
+use Base3\CoreFoundation\Api\IRequest;
+use Base3\CoreFoundation\Language\Api\ILanguage;
 use JsonException;
 
 final class NeuronAgentConfigFormService implements IAgentRuntimeConfigFormService {

@@ -78,7 +78,7 @@ BASE3 LLM connections store the complete HTTP request endpoint. Neuron providers
 expect an API base URI and append `chat/completions` themselves. Path inference is
 not reliable for proxies and provider-specific gateways.
 
-`NeuronAi\Http\ConfiguredEndpointHttpClient` therefore ignores the provider's
+`Base3\NeuronAi\Http\ConfiguredEndpointHttpClient` therefore ignores the provider's
 base URI and maps Neuron's relative `chat/completions` request to the exact
 absolute endpoint stored in the selected BASE3 connection. The client is injected
 through the public Neuron provider constructor. No vendored Neuron source file is

@@ -4,9 +4,9 @@
  * This file is part of NeuronAi for BASE3 Framework.
  **********************************************************************/
 
-namespace NeuronAi\Migration;
+namespace Base3\NeuronAi\Migration;
 
-use Base3\Migration\Api\IDatabaseMigrationProvider;
+use Base3\CoreFoundation\Migration\Api\IDatabaseMigrationProvider;
 
 final class NeuronAiMigrationProvider implements IDatabaseMigrationProvider {
 

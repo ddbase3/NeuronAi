@@ -15,12 +15,12 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Api;
+namespace Base3\NeuronAi\Api;
 
-use AssistantFoundation\Dto\AgentExecutionRequest;
-use Base3\Api\IBase;
-use NeuronAi\Dto\NeuronAgentConfiguration;
-use NeuronAi\Dto\NeuronChatHistoryLease;
+use Base3\AssistantFoundation\Dto\AgentExecutionRequest;
+use Base3\CoreFoundation\Api\IBase;
+use Base3\NeuronAi\Dto\NeuronAgentConfiguration;
+use Base3\NeuronAi\Dto\NeuronChatHistoryLease;
 
 /**
  * Creates a run-scoped lease for a persistent Neuron chat history.

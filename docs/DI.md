@@ -31,7 +31,7 @@ and credential needed for one execution. The stored Neuron agent only contains
 the configured LLM ID.
 
 The current BASE3 wiring supplies
-`MissionBay\Service\ConfiguredAiModelConfigurationProvider`, which adapts the
+`Base3\MissionBay\Service\ConfiguredAiModelConfigurationProvider`, which adapts the
 existing `service-llm` and referenced `connection` records. This is an adapter
 to existing administration data, not a dependency of NeuronAi code on
 MissionBay classes.
@@ -42,7 +42,7 @@ A future standalone LLM configuration plugin can replace this binding with
 ## Runtime selection
 
 `NeuronAgentExecutionService` and `NeuronAgentConfigFormService` expose runtime
-ID `neuronai`. `AssistantRuntime\Service\AgentRuntimeRegistry` accepts the
+ID `neuronai`. `Base3\AssistantRuntime\Service\AgentRuntimeRegistry` accepts the
 runtime only when execution and form services are present.
 
 Agent Admin stores `agent_runtime=neuronai`. Chatbot stores one combined backend

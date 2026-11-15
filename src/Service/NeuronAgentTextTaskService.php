@@ -15,17 +15,17 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use AssistantFoundation\Api\IAgentContextProfileService;
-use AssistantFoundation\Api\IAgentTextTaskRuntimeService;
-use AssistantFoundation\Api\IAgentToolProfileService;
-use AssistantFoundation\Dto\AgentCapability;
-use AssistantFoundation\Dto\AgentExecutionRequest;
-use AssistantFoundation\Dto\AgentTextTaskRequest;
-use AssistantFoundation\Dto\AgentTextTaskResult;
-use NeuronAi\Api\INeuronAgentFactory;
-use NeuronAi\Dto\NeuronAgentConfiguration;
+use Base3\AssistantFoundation\Api\IAgentContextProfileService;
+use Base3\AssistantFoundation\Api\IAgentTextTaskRuntimeService;
+use Base3\AssistantFoundation\Api\IAgentToolProfileService;
+use Base3\AssistantFoundation\Dto\AgentCapability;
+use Base3\AssistantFoundation\Dto\AgentExecutionRequest;
+use Base3\AssistantFoundation\Dto\AgentTextTaskRequest;
+use Base3\AssistantFoundation\Dto\AgentTextTaskResult;
+use Base3\NeuronAi\Api\INeuronAgentFactory;
+use Base3\NeuronAi\Dto\NeuronAgentConfiguration;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\UserMessage;
 
 /**

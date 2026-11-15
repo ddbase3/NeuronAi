@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
-namespace NeuronAiTest\Service;
+namespace Base3\NeuronAiTest\Service;
 
-use Base3\Database\Api\IDatabase;
-use NeuronAi\Chat\History\DatabaseNeuronChatHistory;
-use NeuronAi\Dto\NeuronConversationScope;
-use NeuronAi\Service\NeuronChatHistoryRepository;
+use Base3\CoreFoundation\Database\Api\IDatabase;
+use Base3\NeuronAi\Chat\History\DatabaseNeuronChatHistory;
+use Base3\NeuronAi\Dto\NeuronConversationScope;
+use Base3\NeuronAi\Service\NeuronChatHistoryRepository;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\AssistantMessage;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\UserMessage;
 use PHPUnit\Framework\TestCase;

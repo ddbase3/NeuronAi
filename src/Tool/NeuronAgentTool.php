@@ -15,13 +15,13 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Tool;
+namespace Base3\NeuronAi\Tool;
 
-use AssistantFoundation\Api\IAgentConfirmableToolSet;
-use AssistantFoundation\Api\IAgentToolSet;
-use AssistantFoundation\Dto\AgentCapability;
-use AssistantFoundation\Dto\AgentToolResult;
-use NeuronAi\Exception\NeuronToolSuspensionException;
+use Base3\AssistantFoundation\Api\IAgentConfirmableToolSet;
+use Base3\AssistantFoundation\Api\IAgentToolSet;
+use Base3\AssistantFoundation\Dto\AgentCapability;
+use Base3\AssistantFoundation\Dto\AgentToolResult;
+use Base3\NeuronAi\Exception\NeuronToolSuspensionException;
 use NeuronAi\Vendor\NeuronAI\Tools\ArrayProperty;
 use NeuronAi\Vendor\NeuronAI\Tools\ObjectProperty;
 use NeuronAi\Vendor\NeuronAI\Tools\PropertyType;

@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace NeuronAiTest\Tool;
+namespace Base3\NeuronAiTest\Tool;
 
-use AssistantFoundation\Api\IAgentToolSet;
-use AssistantFoundation\Dto\AgentCapability;
-use AssistantFoundation\Dto\AgentCapabilityCatalog;
-use AssistantFoundation\Dto\AgentToolResult;
-use NeuronAi\Tool\NeuronAgentTool;
+use Base3\AssistantFoundation\Api\IAgentToolSet;
+use Base3\AssistantFoundation\Dto\AgentCapability;
+use Base3\AssistantFoundation\Dto\AgentCapabilityCatalog;
+use Base3\AssistantFoundation\Dto\AgentToolResult;
+use Base3\NeuronAi\Tool\NeuronAgentTool;
 use PHPUnit\Framework\TestCase;
 
 final class NeuronAgentToolTest extends TestCase {

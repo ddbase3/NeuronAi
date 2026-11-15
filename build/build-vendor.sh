@@ -78,7 +78,7 @@ NEURONAI_SCOPE_INPUT="$SCOPE_INPUT" php "$SOURCE_DIR/humbug/php-scoper/bin/php-s
 
 cp "$SOURCE_DIR/ralouphie/getallheaders/src/getallheaders.php" "$GENERATED_DIR/Support/getallheaders.php"
 cp "$SOURCE_DIR/symfony/polyfill-mbstring/bootstrap80.php" "$GENERATED_DIR/Support/mbstring.php"
-sed -i 's/use Symfony\\Polyfill\\Mbstring as p;/use NeuronAi\\Vendor\\Symfony\\Polyfill\\Mbstring as p;/' "$GENERATED_DIR/Support/mbstring.php"
+sed -i 's/use Symfony\\Polyfill\\Mbstring as p;/use Base3\\NeuronAi\\Vendor\\Symfony\\Polyfill\\Mbstring as p;/' "$GENERATED_DIR/Support/mbstring.php"
 
 php "$PLUGIN_DIR/build/verify-vendor.php" "$GENERATED_DIR"
 find "$GENERATED_DIR" -type f -name '*.php' -print0 \

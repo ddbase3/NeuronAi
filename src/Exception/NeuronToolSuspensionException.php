@@ -4,9 +4,9 @@
  * This file is part of NeuronAi for BASE3 Framework.
  **********************************************************************/
 
-namespace NeuronAi\Exception;
+namespace Base3\NeuronAi\Exception;
 
-use AssistantFoundation\Dto\AgentSuspension;
+use Base3\AssistantFoundation\Dto\AgentSuspension;
 
 /** Internal control-flow exception used to pause one Neuron tool call. */
 final class NeuronToolSuspensionException extends \RuntimeException {

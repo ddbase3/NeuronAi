@@ -15,14 +15,14 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use AssistantFoundation\Api\IAiModelConfigurationProvider;
-use AssistantFoundation\Dto\AgentExecutionRequest;
-use AssistantFoundation\Dto\AiModelConfiguration;
-use NeuronAi\Api\INeuronProviderFactory;
-use NeuronAi\Dto\NeuronAgentConfiguration;
-use NeuronAi\Http\ConfiguredEndpointHttpClient;
+use Base3\AssistantFoundation\Api\IAiModelConfigurationProvider;
+use Base3\AssistantFoundation\Dto\AgentExecutionRequest;
+use Base3\AssistantFoundation\Dto\AiModelConfiguration;
+use Base3\NeuronAi\Api\INeuronProviderFactory;
+use Base3\NeuronAi\Dto\NeuronAgentConfiguration;
+use Base3\NeuronAi\Http\ConfiguredEndpointHttpClient;
 use NeuronAi\Vendor\NeuronAI\HttpClient\HttpClientInterface;
 use NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface;
 use NeuronAi\Vendor\NeuronAI\Providers\Mistral\Mistral;

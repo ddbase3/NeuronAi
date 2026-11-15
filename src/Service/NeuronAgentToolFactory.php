@@ -8,11 +8,11 @@
  * standalone BASE3 installations.
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use AssistantFoundation\Api\IAgentToolSet;
-use AssistantFoundation\Dto\AgentCapability;
-use NeuronAi\Tool\NeuronAgentTool;
+use Base3\AssistantFoundation\Api\IAgentToolSet;
+use Base3\AssistantFoundation\Dto\AgentCapability;
+use Base3\NeuronAi\Tool\NeuronAgentTool;
 use NeuronAi\Vendor\NeuronAI\Tools\ToolInterface;
 
 final class NeuronAgentToolFactory {

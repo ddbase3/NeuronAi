@@ -15,9 +15,9 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use NeuronAi\Dto\NeuronAgentConfiguration;
+use Base3\NeuronAi\Dto\NeuronAgentConfiguration;
 
 /**
  * Canonical Neuron conversation-memory profile backed by the native history table.

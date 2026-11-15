@@ -1,13 +1,13 @@
 <?php declare(strict_types=1);
 
-namespace NeuronAiTest\Service;
+namespace Base3\NeuronAiTest\Service;
 
-use AssistantFoundation\Api\IAgentToolSet;
-use AssistantFoundation\Dto\AgentCapability;
-use AssistantFoundation\Dto\AgentCapabilityCatalog;
-use AssistantFoundation\Dto\AgentToolResult;
-use NeuronAi\Service\NeuronExecutionEventMapper;
-use NeuronAi\Tool\NeuronAgentTool;
+use Base3\AssistantFoundation\Api\IAgentToolSet;
+use Base3\AssistantFoundation\Dto\AgentCapability;
+use Base3\AssistantFoundation\Dto\AgentCapabilityCatalog;
+use Base3\AssistantFoundation\Dto\AgentToolResult;
+use Base3\NeuronAi\Service\NeuronExecutionEventMapper;
+use Base3\NeuronAi\Tool\NeuronAgentTool;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\Stream\Chunks\TextChunk;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\Stream\Chunks\ToolCallChunk;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\Stream\Chunks\ToolResultChunk;

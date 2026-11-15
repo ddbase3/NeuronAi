@@ -15,33 +15,33 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi;
+namespace Base3\NeuronAi;
 
-use AssistantFoundation\Api\IAgentContextProfileService;
-use AssistantFoundation\Api\IAgentSuspensionRepository;
-use AssistantFoundation\Api\IAgentToolProfileService;
-use AssistantFoundation\Api\IAiModelConfigurationProvider;
-use Base3\Api\IContainer;
-use Base3\Api\IPlugin;
-use Base3\Api\IRequest;
-use Base3\Accesscontrol\Api\IAccesscontrol;
-use Base3\Database\Api\IDatabase;
-use Base3\Language\Api\ILanguage;
-use Base3\Session\Api\ISession;
-use NeuronAi\Api\INeuronAgentFactory;
-use NeuronAi\Api\INeuronChatHistoryFactory;
-use NeuronAi\Api\INeuronProviderFactory;
-use NeuronAi\Service\NeuronAgentConfigFormService;
-use NeuronAi\Service\NeuronConversationOwnerResolver;
-use NeuronAi\Service\NeuronAgentExecutionService;
-use NeuronAi\Service\NeuronAgentFactory;
-use NeuronAi\Service\NeuronAgentToolFactory;
-use NeuronAi\Service\NeuronChatHistoryFactory;
-use NeuronAi\Service\NeuronChatHistoryRepository;
-use NeuronAi\Service\NeuronContextInstructionsBuilder;
-use NeuronAi\Service\NeuronConversationKeyFactory;
-use NeuronAi\Service\NeuronExecutionEventMapper;
-use NeuronAi\Service\NeuronProviderFactory;
+use Base3\AssistantFoundation\Api\IAgentContextProfileService;
+use Base3\AssistantFoundation\Api\IAgentSuspensionRepository;
+use Base3\AssistantFoundation\Api\IAgentToolProfileService;
+use Base3\AssistantFoundation\Api\IAiModelConfigurationProvider;
+use Base3\CoreFoundation\Api\IContainer;
+use Base3\CoreFoundation\Api\IPlugin;
+use Base3\CoreFoundation\Api\IRequest;
+use Base3\CoreFoundation\Accesscontrol\Api\IAccesscontrol;
+use Base3\CoreFoundation\Database\Api\IDatabase;
+use Base3\CoreFoundation\Language\Api\ILanguage;
+use Base3\CoreFoundation\Session\Api\ISession;
+use Base3\NeuronAi\Api\INeuronAgentFactory;
+use Base3\NeuronAi\Api\INeuronChatHistoryFactory;
+use Base3\NeuronAi\Api\INeuronProviderFactory;
+use Base3\NeuronAi\Service\NeuronAgentConfigFormService;
+use Base3\NeuronAi\Service\NeuronConversationOwnerResolver;
+use Base3\NeuronAi\Service\NeuronAgentExecutionService;
+use Base3\NeuronAi\Service\NeuronAgentFactory;
+use Base3\NeuronAi\Service\NeuronAgentToolFactory;
+use Base3\NeuronAi\Service\NeuronChatHistoryFactory;
+use Base3\NeuronAi\Service\NeuronChatHistoryRepository;
+use Base3\NeuronAi\Service\NeuronContextInstructionsBuilder;
+use Base3\NeuronAi\Service\NeuronConversationKeyFactory;
+use Base3\NeuronAi\Service\NeuronExecutionEventMapper;
+use Base3\NeuronAi\Service\NeuronProviderFactory;
 
 class NeuronAiPlugin implements IPlugin {
 

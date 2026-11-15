@@ -15,10 +15,10 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use Base3\Accesscontrol\Api\IAccesscontrol;
-use Base3\Session\Api\ISession;
+use Base3\CoreFoundation\Accesscontrol\Api\IAccesscontrol;
+use Base3\CoreFoundation\Session\Api\ISession;
 
 /**
  * Resolves the same server-owned conversation owner identity used by Chatbot turns.

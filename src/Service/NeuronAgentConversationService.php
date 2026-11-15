@@ -4,13 +4,13 @@
  * This file is part of NeuronAi for BASE3 Framework.
  **********************************************************************/
 
-namespace NeuronAi\Service;
+namespace Base3\NeuronAi\Service;
 
-use AssistantFoundation\Api\IAgentConversationRuntimeService;
-use AssistantFoundation\Dto\AgentConversation;
-use AssistantFoundation\Dto\AgentConversationRequest;
-use AssistantFoundation\Dto\AgentConversationState;
-use NeuronAi\Dto\NeuronConversationScope;
+use Base3\AssistantFoundation\Api\IAgentConversationRuntimeService;
+use Base3\AssistantFoundation\Dto\AgentConversation;
+use Base3\AssistantFoundation\Dto\AgentConversationRequest;
+use Base3\AssistantFoundation\Dto\AgentConversationState;
+use Base3\NeuronAi\Dto\NeuronConversationScope;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\AssistantMessage;
 use NeuronAi\Vendor\NeuronAI\Chat\Messages\UserMessage;
 

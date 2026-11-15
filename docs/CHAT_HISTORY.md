@@ -42,7 +42,7 @@ instance and runtime.
 ## Database table
 
 The repository creates `base3_neuronai_chathistory` lazily through
-`Base3\Database\Api\IDatabase`.
+`Base3\CoreFoundation\Database\Api\IDatabase`.
 
 Each conversation is stored as one Neuron-native serialized history document:
 

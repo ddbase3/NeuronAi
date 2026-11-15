@@ -1,8 +1,8 @@
 <?php declare(strict_types=1);
 
-namespace NeuronAiTest\Dto;
+namespace Base3\NeuronAiTest\Dto;
 
-use NeuronAi\Dto\NeuronAgentConfiguration;
+use Base3\NeuronAi\Dto\NeuronAgentConfiguration;
 use PHPUnit\Framework\TestCase;
 
 final class NeuronAgentConfigurationTest extends TestCase {

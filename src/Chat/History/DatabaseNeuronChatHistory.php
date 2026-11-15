@@ -15,10 +15,10 @@
  * https://github.com/ddbase3/NeuronAi
  **********************************************************************/
 
-namespace NeuronAi\Chat\History;
+namespace Base3\NeuronAi\Chat\History;
 
-use NeuronAi\Dto\NeuronChatHistoryRecord;
-use NeuronAi\Service\NeuronChatHistoryRepository;
+use Base3\NeuronAi\Dto\NeuronChatHistoryRecord;
+use Base3\NeuronAi\Service\NeuronChatHistoryRepository;
 use NeuronAi\Vendor\NeuronAI\Chat\History\AbstractChatHistory;
 
 /**

@@ -15,9 +15,9 @@ if (
 }
 
 (static function(array $arguments): void {
-	if (!interface_exists('Base3\\Api\\IBase')) {
+	if (!interface_exists('Base3\\CoreFoundation\\Api\\IBase')) {
 		eval(<<<'PHP'
-namespace Base3\Api;
+namespace Base3\CoreFoundation\Api;
 
 interface IBase {
 	public static function getName(): string;
@@ -31,9 +31,9 @@ PHP);
 	spl_autoload_register(static function(string $class) use ($pluginDir, $foundationDir, $runtimeDir): void {
 		$prefixes = [
 			'NeuronAi\\Vendor\\' => $pluginDir . '/src/Vendor/',
-			'NeuronAi\\' => $pluginDir . '/src/',
-			'AssistantFoundation\\' => $foundationDir . '/',
-			'AssistantRuntime\\' => $runtimeDir . '/'
+			'Base3\\NeuronAi\\' => $pluginDir . '/src/',
+			'Base3\\AssistantFoundation\\' => $foundationDir . '/',
+			'Base3\\AssistantRuntime\\' => $runtimeDir . '/'
 		];
 		foreach ($prefixes as $prefix => $directory) {
 			if (!str_starts_with($class, $prefix)) {
@@ -85,23 +85,23 @@ PHP);
 		public function setHttpClient(\NeuronAi\Vendor\NeuronAI\HttpClient\HttpClientInterface $client): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface { return $this; }
 	};
 
-	$providerFactory = new class($provider) implements \NeuronAi\Api\INeuronProviderFactory {
+	$providerFactory = new class($provider) implements \Base3\NeuronAi\Api\INeuronProviderFactory {
 		public function __construct(private readonly \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface $provider) {}
 		public static function getName(): string { return 'mutationfakeproviderfactory'; }
-		public function create(\NeuronAi\Dto\NeuronAgentConfiguration $configuration, \AssistantFoundation\Dto\AgentExecutionRequest $request): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface { return $this->provider; }
+		public function create(\Base3\NeuronAi\Dto\NeuronAgentConfiguration $configuration, \Base3\AssistantFoundation\Dto\AgentExecutionRequest $request): \NeuronAi\Vendor\NeuronAI\Providers\AIProviderInterface { return $this->provider; }
 	};
-	$chatHistoryFactory = new class implements \NeuronAi\Api\INeuronChatHistoryFactory {
+	$chatHistoryFactory = new class implements \Base3\NeuronAi\Api\INeuronChatHistoryFactory {
 		public static function getName(): string { return 'mutationnullhistoryfactory'; }
-		public function create(\NeuronAi\Dto\NeuronAgentConfiguration $configuration, \AssistantFoundation\Dto\AgentExecutionRequest $request): ?\NeuronAi\Dto\NeuronChatHistoryLease { return null; }
+		public function create(\Base3\NeuronAi\Dto\NeuronAgentConfiguration $configuration, \Base3\AssistantFoundation\Dto\AgentExecutionRequest $request): ?\Base3\NeuronAi\Dto\NeuronChatHistoryLease { return null; }
 	};
-	$contextProfileService = new class implements \AssistantFoundation\Api\IAgentContextProfileService {
+	$contextProfileService = new class implements \Base3\AssistantFoundation\Api\IAgentContextProfileService {
 		public static function getName(): string { return 'mutationemptycontextservice'; }
 		public function getOptions(): array { return []; }
 		public function hasProfile(string $profileId): bool { return false; }
-		public function build(string $profileId, \AssistantFoundation\Dto\AgentExecutionRequest $request): \AssistantFoundation\Dto\AgentContextProfileResult { return new \AssistantFoundation\Dto\AgentContextProfileResult(''); }
+		public function build(string $profileId, \Base3\AssistantFoundation\Dto\AgentExecutionRequest $request): \Base3\AssistantFoundation\Dto\AgentContextProfileResult { return new \Base3\AssistantFoundation\Dto\AgentContextProfileResult(''); }
 	};
 
-	$capability = new \AssistantFoundation\Dto\AgentCapability(
+	$capability = new \Base3\AssistantFoundation\Dto\AgentCapability(
 		'smoke_mutation',
 		'Smoke mutation',
 		'Writes one controlled smoke value.',
@@ -125,19 +125,19 @@ PHP);
 			]
 		]
 	);
-	$toolSet = new class($capability) implements \AssistantFoundation\Api\IAgentConfirmableToolSet {
-		private \AssistantFoundation\Dto\AgentCapabilityCatalog $catalog;
+	$toolSet = new class($capability) implements \Base3\AssistantFoundation\Api\IAgentConfirmableToolSet {
+		private \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog $catalog;
 		public int $executions = 0;
-		public ?\AssistantFoundation\Dto\AgentInteractionResponse $lastResponse = null;
-		public function __construct(\AssistantFoundation\Dto\AgentCapability $capability) { $this->catalog = new \AssistantFoundation\Dto\AgentCapabilityCatalog([$capability]); }
-		public function getCatalog(): \AssistantFoundation\Dto\AgentCapabilityCatalog { return $this->catalog; }
+		public ?\Base3\AssistantFoundation\Dto\AgentInteractionResponse $lastResponse = null;
+		public function __construct(\Base3\AssistantFoundation\Dto\AgentCapability $capability) { $this->catalog = new \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog([$capability]); }
+		public function getCatalog(): \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog { return $this->catalog; }
 		public function getWarnings(): array { return []; }
-		public function execute(string $callId, string $toolName, array $arguments, array $metadata = []): \AssistantFoundation\Dto\AgentToolResult { throw new \LogicException('Mutation must not execute without approval.'); }
-		public function prepareSuspension(string $callId, string $toolName, array $arguments, array $metadata = []): ?\AssistantFoundation\Dto\AgentSuspension {
-			$action = new \AssistantFoundation\Dto\AgentAction($callId, \AssistantFoundation\Dto\AgentAction::TYPE_TOOL_CALL, $toolName, $arguments);
-			$request = new \AssistantFoundation\Dto\AgentInteractionRequest(
+		public function execute(string $callId, string $toolName, array $arguments, array $metadata = []): \Base3\AssistantFoundation\Dto\AgentToolResult { throw new \LogicException('Mutation must not execute without approval.'); }
+		public function prepareSuspension(string $callId, string $toolName, array $arguments, array $metadata = []): ?\Base3\AssistantFoundation\Dto\AgentSuspension {
+			$action = new \Base3\AssistantFoundation\Dto\AgentAction($callId, \Base3\AssistantFoundation\Dto\AgentAction::TYPE_TOOL_CALL, $toolName, $arguments);
+			$request = new \Base3\AssistantFoundation\Dto\AgentInteractionRequest(
 				'mutation-request',
-				\AssistantFoundation\Dto\AgentInteractionRequest::KIND_APPROVAL,
+				\Base3\AssistantFoundation\Dto\AgentInteractionRequest::KIND_APPROVAL,
 				$action,
 				str_repeat('a', 64),
 				'Confirm smoke mutation',
@@ -145,9 +145,9 @@ PHP);
 				['Value' => $arguments['value'] ?? ''],
 				'medium'
 			);
-			return new \AssistantFoundation\Dto\AgentSuspension(
+			return new \Base3\AssistantFoundation\Dto\AgentSuspension(
 				'mutation-suspension',
-				\AssistantFoundation\Dto\AgentExecutionStatus::AWAITING_APPROVAL,
+				\Base3\AssistantFoundation\Dto\AgentExecutionStatus::AWAITING_APPROVAL,
 				[$request],
 				['tool_call' => [
 					'id' => $callId,
@@ -158,23 +158,23 @@ PHP);
 				gmdate('c')
 			);
 		}
-		public function resumeSuspension(\AssistantFoundation\Dto\AgentSuspension $suspension, \AssistantFoundation\Dto\AgentInteractionResponse $response, array $metadata = []): \AssistantFoundation\Dto\AgentToolResult {
+		public function resumeSuspension(\Base3\AssistantFoundation\Dto\AgentSuspension $suspension, \Base3\AssistantFoundation\Dto\AgentInteractionResponse $response, array $metadata = []): \Base3\AssistantFoundation\Dto\AgentToolResult {
 			$this->lastResponse = $response;
-			if ($response->getDecision() !== \AssistantFoundation\Dto\AgentInteractionResponse::DECISION_APPROVE) {
-				return \AssistantFoundation\Dto\AgentToolResult::failure('mutation-call', 'smoke_mutation', ['value' => 'Atlas'], 'denied', 'Denied');
+			if ($response->getDecision() !== \Base3\AssistantFoundation\Dto\AgentInteractionResponse::DECISION_APPROVE) {
+				return \Base3\AssistantFoundation\Dto\AgentToolResult::failure('mutation-call', 'smoke_mutation', ['value' => 'Atlas'], 'denied', 'Denied');
 			}
 			$this->executions++;
-			return \AssistantFoundation\Dto\AgentToolResult::success('mutation-call', 'smoke_mutation', ['value' => 'Atlas'], ['stored' => 'Atlas'], ['iteration' => 1, 'call_index' => 1]);
+			return \Base3\AssistantFoundation\Dto\AgentToolResult::success('mutation-call', 'smoke_mutation', ['value' => 'Atlas'], ['stored' => 'Atlas'], ['iteration' => 1, 'call_index' => 1]);
 		}
 	};
-	$unsafeToolSet = new class($capability) implements \AssistantFoundation\Api\IAgentToolSet {
-		private \AssistantFoundation\Dto\AgentCapabilityCatalog $catalog;
-		public function __construct(\AssistantFoundation\Dto\AgentCapability $capability) { $this->catalog = new \AssistantFoundation\Dto\AgentCapabilityCatalog([$capability]); }
-		public function getCatalog(): \AssistantFoundation\Dto\AgentCapabilityCatalog { return $this->catalog; }
+	$unsafeToolSet = new class($capability) implements \Base3\AssistantFoundation\Api\IAgentToolSet {
+		private \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog $catalog;
+		public function __construct(\Base3\AssistantFoundation\Dto\AgentCapability $capability) { $this->catalog = new \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog([$capability]); }
+		public function getCatalog(): \Base3\AssistantFoundation\Dto\AgentCapabilityCatalog { return $this->catalog; }
 		public function getWarnings(): array { return []; }
-		public function execute(string $callId, string $toolName, array $arguments, array $metadata = []): \AssistantFoundation\Dto\AgentToolResult { return \AssistantFoundation\Dto\AgentToolResult::success($callId, $toolName, $arguments, ['unsafe' => true]); }
+		public function execute(string $callId, string $toolName, array $arguments, array $metadata = []): \Base3\AssistantFoundation\Dto\AgentToolResult { return \Base3\AssistantFoundation\Dto\AgentToolResult::success($callId, $toolName, $arguments, ['unsafe' => true]); }
 	};
-	$unsafeTool = (new \NeuronAi\Service\NeuronAgentToolFactory())->createOne($capability, $unsafeToolSet);
+	$unsafeTool = (new \Base3\NeuronAi\Service\NeuronAgentToolFactory())->createOne($capability, $unsafeToolSet);
 	$unsafeTool->setCallId('unsafe-mutation')->setInputs(['value' => 'Atlas']);
 	try {
 		$unsafeTool->execute();
@@ -186,27 +186,27 @@ PHP);
 		}
 	}
 
-	$toolProfileService = new class($toolSet) implements \AssistantFoundation\Api\IAgentToolProfileService {
-		public function __construct(private readonly \AssistantFoundation\Api\IAgentToolSet $toolSet) {}
+	$toolProfileService = new class($toolSet) implements \Base3\AssistantFoundation\Api\IAgentToolProfileService {
+		public function __construct(private readonly \Base3\AssistantFoundation\Api\IAgentToolSet $toolSet) {}
 		public static function getName(): string { return 'mutationtoolprofileservice'; }
 		public function getOptions(): array { return [['id' => 'mutation-tools', 'label' => 'Mutation tools']]; }
 		public function hasProfile(string $profileId): bool { return $profileId === 'mutation-tools'; }
-		public function resolve(array $profileIds, \AssistantFoundation\Dto\AgentExecutionRequest $request): \AssistantFoundation\Api\IAgentToolSet { return new \AssistantRuntime\Service\CompositeAgentToolSet([$this->toolSet]); }
+		public function resolve(array $profileIds, \Base3\AssistantFoundation\Dto\AgentExecutionRequest $request): \Base3\AssistantFoundation\Api\IAgentToolSet { return new \Base3\AssistantRuntime\Service\CompositeAgentToolSet([$this->toolSet]); }
 	};
-	$repository = new class implements \AssistantFoundation\Api\IAgentSuspensionRepository {
+	$repository = new class implements \Base3\AssistantFoundation\Api\IAgentSuspensionRepository {
 		private array $records = [];
 		private array $claims = [];
-		public function create(\AssistantFoundation\Dto\AgentSuspension $suspension, int $ttlSeconds): string {
+		public function create(\Base3\AssistantFoundation\Dto\AgentSuspension $suspension, int $ttlSeconds): string {
 			$handle = str_repeat('h', 43);
 			$this->records[$handle] = $suspension;
 			return $handle;
 		}
-		public function findPending(string $scopeId): ?\AssistantFoundation\Dto\AgentSuspensionState {
+		public function findPending(string $scopeId): ?\Base3\AssistantFoundation\Dto\AgentSuspensionState {
 			foreach ($this->records as $handle => $suspension) {
 				if ($suspension->getScopeId() !== $scopeId) {
 					continue;
 				}
-				return new \AssistantFoundation\Dto\AgentSuspensionState(
+				return new \Base3\AssistantFoundation\Dto\AgentSuspensionState(
 					true,
 					$suspension->getStatus(),
 					$suspension->getRequests(),
@@ -215,26 +215,26 @@ PHP);
 			}
 			return null;
 		}
-		public function claim(string $resumeHandle): \AssistantFoundation\Dto\AgentSuspensionClaim {
+		public function claim(string $resumeHandle): \Base3\AssistantFoundation\Dto\AgentSuspensionClaim {
 			if (!isset($this->records[$resumeHandle])) {
 				throw new \RuntimeException('Missing smoke suspension.');
 			}
-			$claim = new \AssistantFoundation\Dto\AgentSuspensionClaim($resumeHandle, 'smoke-claim', $this->records[$resumeHandle]);
+			$claim = new \Base3\AssistantFoundation\Dto\AgentSuspensionClaim($resumeHandle, 'smoke-claim', $this->records[$resumeHandle]);
 			$this->claims[$resumeHandle] = $claim;
 			return $claim;
 		}
-		public function release(\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void { unset($this->claims[$claim->getResumeHandle()]); }
-		public function consume(\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void { unset($this->claims[$claim->getResumeHandle()], $this->records[$claim->getResumeHandle()]); }
+		public function release(\Base3\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void { unset($this->claims[$claim->getResumeHandle()]); }
+		public function consume(\Base3\AssistantFoundation\Dto\AgentSuspensionClaim $claim): void { unset($this->claims[$claim->getResumeHandle()], $this->records[$claim->getResumeHandle()]); }
 	};
 
-	$toolFactory = new \NeuronAi\Service\NeuronAgentToolFactory();
-	$service = new \NeuronAi\Service\NeuronAgentExecutionService(
-		new \NeuronAi\Service\NeuronAgentFactory($providerFactory, $toolFactory),
+	$toolFactory = new \Base3\NeuronAi\Service\NeuronAgentToolFactory();
+	$service = new \Base3\NeuronAi\Service\NeuronAgentExecutionService(
+		new \Base3\NeuronAi\Service\NeuronAgentFactory($providerFactory, $toolFactory),
 		$chatHistoryFactory,
-		new \NeuronAi\Service\NeuronExecutionEventMapper(),
+		new \Base3\NeuronAi\Service\NeuronExecutionEventMapper(),
 		$contextProfileService,
 		$toolProfileService,
-		new \NeuronAi\Service\NeuronContextInstructionsBuilder(),
+		new \Base3\NeuronAi\Service\NeuronContextInstructionsBuilder(),
 		$repository,
 		$toolFactory
 	);
@@ -246,8 +246,8 @@ PHP);
 		'conversation_id' => 'mutation-conversation',
 		'conversation_owner_key' => str_repeat('b', 64)
 	];
-	$firstSink = new \AssistantRuntime\Service\CollectingAgentEventSink();
-	$first = $service->execute(new \AssistantFoundation\Dto\AgentExecutionRequest(
+	$firstSink = new \Base3\AssistantRuntime\Service\CollectingAgentEventSink();
+	$first = $service->execute(new \Base3\AssistantFoundation\Dto\AgentExecutionRequest(
 		$configuration,
 		['prompt' => 'Store Atlas.'],
 		$context
@@ -264,7 +264,7 @@ PHP);
 	$suspensionState = $first->getAgentResult()->getState()->getSuspension();
 	$handle = $suspensionState?->getResumeHandle() ?? '';
 	$requestId = $suspensionState?->getInteractionRequests()[0]->getId() ?? '';
-	$scopeId = \AssistantFoundation\Dto\AgentSuspensionScope::forConversation(
+	$scopeId = \Base3\AssistantFoundation\Dto\AgentSuspensionScope::forConversation(
 		$context['conversation_channel_id'],
 		$context['conversation_id']
 	);
@@ -279,8 +279,8 @@ PHP);
 		throw new \RuntimeException('Mutation executed before approval or pending suspension state is incomplete.');
 	}
 
-	$secondSink = new \AssistantRuntime\Service\CollectingAgentEventSink();
-	$second = $service->execute(new \AssistantFoundation\Dto\AgentExecutionRequest(
+	$secondSink = new \Base3\AssistantRuntime\Service\CollectingAgentEventSink();
+	$second = $service->execute(new \Base3\AssistantFoundation\Dto\AgentExecutionRequest(
 		$configuration,
 		[
 			'prompt' => 'I approve.',
@@ -310,11 +310,11 @@ PHP);
 
 	$provider->streamCalls = 0;
 	$provider->receivedToolResult = false;
-	$feedbackStart = $service->execute(new \AssistantFoundation\Dto\AgentExecutionRequest(
+	$feedbackStart = $service->execute(new \Base3\AssistantFoundation\Dto\AgentExecutionRequest(
 		$configuration,
 		['prompt' => 'Store Atlas again.'],
 		$context
-	), new \AssistantRuntime\Service\CollectingAgentEventSink());
+	), new \Base3\AssistantRuntime\Service\CollectingAgentEventSink());
 	$feedbackSuspension = $feedbackStart->getAgentResult()?->getState()->getSuspension();
 	$feedbackHandle = $feedbackSuspension?->getResumeHandle() ?? '';
 	if ($feedbackHandle === '') {
@@ -322,7 +322,7 @@ PHP);
 	}
 
 	$feedbackText = 'Bitte speichere stattdessen den Wert Orion.';
-	$feedbackResult = $service->execute(new \AssistantFoundation\Dto\AgentExecutionRequest(
+	$feedbackResult = $service->execute(new \Base3\AssistantFoundation\Dto\AgentExecutionRequest(
 		$configuration,
 		[
 			'prompt' => $feedbackText,
@@ -332,10 +332,10 @@ PHP);
 			]
 		],
 		$context
-	), new \AssistantRuntime\Service\CollectingAgentEventSink());
+	), new \Base3\AssistantRuntime\Service\CollectingAgentEventSink());
 	if (
 		$toolSet->executions !== 1
-		|| $toolSet->lastResponse?->getDecision() !== \AssistantFoundation\Dto\AgentInteractionResponse::DECISION_DENY
+		|| $toolSet->lastResponse?->getDecision() !== \Base3\AssistantFoundation\Dto\AgentInteractionResponse::DECISION_DENY
 		|| $toolSet->lastResponse?->getNote() !== $feedbackText
 		|| ($feedbackResult->getOutput()['assistant']['message']['content'] ?? '') !== 'Mutation confirmed'
 	) {
